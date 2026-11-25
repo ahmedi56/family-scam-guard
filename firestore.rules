@@ -1,19 +1,44 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Shape checks: anyone can sign in anonymously, so every write is limited to the exact fields
+    // the app writes, with bounded sizes. This stops spam text, oversized docs and malformed data
+    // that would break other users' feeds.
+    function shortText(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
+    function okReasons(v) { return v is list && v.size() <= 8; }
+
     // Private scan history: only the (anonymous) owner.
     match /users/{uid}/scans/{id} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['verdict', 'category', 'source', 'createdAt'])
+        && request.resource.data.verdict in ['scam', 'suspicious', 'safe']
+        && shortText(request.resource.data.category, 200)
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
     // Family alerts: the family code acts as a shared secret. Alerts hold no message text.
     match /families/{code}/alerts/{id} {
-      allow read, create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && code.size() >= 4 && code.size() <= 64
+        && request.resource.data.keys().hasOnly(['verdict', 'category', 'reasons', 'from', 'createdAt'])
+        && request.resource.data.verdict in ['scam', 'suspicious']
+        && shortText(request.resource.data.category, 200)
+        && okReasons(request.resource.data.reasons)
+        && shortText(request.resource.data.from, 10)
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
-    // Community scam patterns: signed-in users can read and add, nothing else.
+    // Community scam patterns: signed-in users can read and add well-formed reports, nothing else.
     match /reports/{id} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['category', 'reasons', 'uid', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && shortText(request.resource.data.category, 200)
+        && okReasons(request.resource.data.reasons)
+        && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }
   }

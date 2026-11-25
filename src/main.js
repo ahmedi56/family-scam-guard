@@ -5,6 +5,8 @@ import { saveScan, alertFamily, watchFamilyAlerts, reportPattern, watchCommunity
 import { loadFlagged, flaggedIn, rememberScammer, describe, textKey, VERDICT_KEY } from './signals.js';
 
 const $ = (id) => document.getElementById(id);
+// Firestore data comes from other users: tolerate anything that isn't a list of strings.
+const listText = (v) => (Array.isArray(v) ? v.map(String).join(' · ') : '');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const VERDICT = {
@@ -76,7 +78,7 @@ function bindFamily() {
           .map((a) => {
             const v = VERDICT[a.verdict] || VERDICT.suspicious;
             const when = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString() : 'just now';
-            return `<li class="${v.cls}"><b>${v.icon} ${esc(a.category)}</b><br><small>${esc((a.reasons || []).join(' · '))}<br>${when}</small></li>`;
+            return `<li class="${v.cls}"><b>${v.icon} ${esc(a.category)}</b><br><small>${esc(listText(a.reasons))}<br>${when}</small></li>`;
           })
           .join('')
       : '<li class="muted">No alerts yet. 🎉</li>';
@@ -91,7 +93,7 @@ $('code').addEventListener('change', bindFamily);
 watchCommunity((items) => {
   if (!items.length) return;
   $('community').innerHTML = items
-    .map((r) => `<li><b>${esc(r.category)}</b><br><small>${esc((r.reasons || []).join(' · '))}</small></li>`)
+    .map((r) => `<li><b>${esc(r.category)}</b><br><small>${esc(listText(r.reasons))}</small></li>`)
     .join('');
 }, (e) => {
   console.warn('Community feed failed', e);

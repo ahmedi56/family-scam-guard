@@ -32,7 +32,7 @@ Fake bank alerts, "you won a prize" texts and "Mum, I lost my phone" WhatsApp me
 Family Scam Guard gives a clear verdict (**🚨 scam**, **⚠️ be careful** or **✅ looks safe**), the reasons, and one simple next step, in **English, French, Arabic or Nigerian Pidgin**.
 
 - 🤖 **Guardian watches for you.** On any website (WhatsApp Web, Gmail, Facebook…), it reacts instantly when a new message shows scam signs and offers an AI check with one click.
-- 🔒 **Private by design.** The AI runs on your device first. Message text is never uploaded or stored.
+- 🔒 **Private by design.** The AI runs on your device first. Message text is never stored, and goes to the cloud AI only when on-device AI isn't available.
 - 👪 **Family alerts.** When a parent gets a risky message, their children get an alert with the scam type, never the message itself.
 
 ## Demo
@@ -115,7 +115,7 @@ What makes it robust in real life (`src/detector.js`):
 
 | | |
 | --- | --- |
-| **Message text** | Never uploaded, never stored |
+| **Message text** | Never stored. Sent only to Gemini (through Firebase AI Logic) when the on-device model isn't available or Fast mode is on |
 | **Guardian** | Reads pages only on your computer, with local rules |
 | **AI check** | On your device first. The cloud is used only when on-device AI isn't available |
 | **What Firestore stores** | Verdict, scam type and short reasons only |

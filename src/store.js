@@ -21,7 +21,7 @@ export async function alertFamily(code, result) {
   await addDoc(collection(db, 'families', code, 'alerts'), {
     verdict: result.verdict,
     category: result.category,
-    reasons: result.reasons,
+    reasons: (result.reasons || []).slice(0, 8), // rules allow at most 8
     from: user.uid.slice(0, 6),
     createdAt: serverTimestamp(),
   });
@@ -57,7 +57,7 @@ export async function reportPattern(result) {
   const user = await ensureUser();
   await addDoc(collection(db, 'reports'), {
     category: result.category,
-    reasons: result.reasons,
+    reasons: (result.reasons || []).slice(0, 8), // rules allow at most 8
     uid: user.uid,
     createdAt: serverTimestamp(),
   });
