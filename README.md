@@ -37,7 +37,7 @@ Family Scam Guard gives a clear verdict (**🚨 scam**, **⚠️ be careful** or
 
 ## Demo
 
-> 🎬 **Demo video:** _link coming soon_ · 🌐 **Live web app:** _link coming soon_
+> 🎬 **Demo video:** _link coming soon_ · 🌐 **Live web app:** [family-scam-guard.web.app](https://family-scam-guard.web.app)
 
 | Guardian state | What you see |
 | --- | --- |
