@@ -1,12 +1,12 @@
 /* Colors come from the app icon: navy night, teal and sky "guardian wings", amber beacon. */
 :root {
   --navy: #0f172a; --indigo: #1e1b4b; --teal: #0d9488; --teal-2: #5eead4; --sky: #0284c7; --sky-2: #38bdf8; --amber: #f59e0b;
-  --bad: #dc2626; --warn: #d97706; --ok: #059669;
-  --bg: #f1f5f9; --card: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #e2e8f0; --chip: #e2e8f0;
-  --grad: linear-gradient(135deg, var(--teal), var(--sky));
+  --bad: #dc2626; --warn: #b45309; --ok: #047857;
+  --bg: #f1f5f9; --card: #ffffff; --ink: #0f172a; --muted: #475569; --line: #e2e8f0; --chip: #e2e8f0;
+  --grad: linear-gradient(135deg, #0f766e, #0369a1); /* darker stops keep white text above 4.5:1 */
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --bg: #0b1020; --card: #131a2e; --ink: #e2e8f0; --muted: #94a3b8; --line: #263049; --chip: #1e293b; }
+  :root:not([data-theme="light"]) { --bg: #0b1020; --card: #131a2e; --ink: #e2e8f0; --muted: #94a3b8; --line: #263049; --chip: #1e293b; --bad: #f87171; --warn: #fbbf24; --ok: #34d399; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 360px; font: 17px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); }
@@ -31,9 +31,10 @@ nav button.active { background: var(--grad); color: #fff; box-shadow: 0 3px 10px
 textarea, input[type=text], input:not([type]), select { width: 100%; padding: 12px; font: inherit; color: var(--ink); background: var(--card); border: 2px solid var(--line); border-radius: 14px; }
 textarea:focus, input:focus, select:focus { border-color: var(--sky-2); outline: none; }
 .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin: 10px 0; flex-wrap: wrap; }
-.row select { width: auto; padding: 6px 8px; }
+.row select { width: auto; padding: 6px 8px; min-height: 44px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 label { display: block; margin: 8px 0; }
-label.check { display: flex; gap: 8px; align-items: center; }
+label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; cursor: pointer; }
 label.fast { margin-left: auto; font-weight: 600; }
 input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--teal); }
 

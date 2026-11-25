@@ -16,7 +16,10 @@ const VERDICT = {
 // ---- tabs -------------------------------------------------------------------------------
 document.querySelectorAll('nav button').forEach((b) =>
   b.addEventListener('click', () => {
-    document.querySelectorAll('nav button').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('nav button').forEach((x) => {
+      x.classList.toggle('active', x === b);
+      x.setAttribute('aria-pressed', String(x === b));
+    });
     ['check', 'family', 'community'].forEach((t) => ($(`tab-${t}`).hidden = t !== b.dataset.tab));
   }),
 );

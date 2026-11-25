@@ -72,7 +72,8 @@
   document.documentElement.appendChild(host);
   const wrap = root.querySelector('.w');
   const bubble = root.querySelector('.b');
-  const COLORS = { watch: '#0d9488', warn: '#d97706', scan: '#0284c7', ok: '#059669', bad: '#dc2626' };
+  // Darker shades keep bubble titles and white button text above 4.5:1 contrast.
+  const COLORS = { watch: '#0f766e', warn: '#b45309', scan: '#0369a1', ok: '#047857', bad: '#b91c1c' };
   const EYES = { watch: '#5EEAD4', warn: '#FBBF24', scan: '#38BDF8', ok: '#34D399', bad: '#F87171' };
 
   let current = null; // { text, key, block } the message Guardian is talking about

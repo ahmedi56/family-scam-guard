@@ -18,16 +18,17 @@
             <p class="tag">Paste a suspicious message. Checked on your device first.</p>
           </div>
         </div>
-        <span id="engine" class="badge">Engine: checking…</span>
+        <span id="engine" class="badge" role="status">Engine: checking…</span>
       </header>
 
-      <nav>
-        <button data-tab="check" class="active">Check</button>
-        <button data-tab="family">Family</button>
-        <button data-tab="community">Community</button>
+      <nav aria-label="Sections">
+        <button data-tab="check" class="active" aria-pressed="true">Check</button>
+        <button data-tab="family" aria-pressed="false">Family</button>
+        <button data-tab="community" aria-pressed="false">Community</button>
       </nav>
 
       <section id="tab-check">
+        <label for="msg" class="sr-only">Message to check</label>
         <textarea id="msg" rows="5" placeholder="Paste the SMS, WhatsApp message, email or link here…"></textarea>
         <div class="row">
           <button id="paste" class="ghost" type="button">📋 Paste</button>
@@ -47,14 +48,14 @@
           <small class="muted">Ctrl+Enter to check</small>
         </div>
         <button id="go" class="primary">Check message</button>
-        <div id="result" hidden></div>
+        <div id="result" role="status" aria-live="polite" hidden></div>
       </section>
 
       <section id="tab-family" hidden>
         <p>Share one family code. When the protected person gets a risky message, guardians see an alert (never the message itself).</p>
         <label>Family code <input id="code" placeholder="e.g. mama-2026" /></label>
         <label class="check"><input type="checkbox" id="notify" checked /> Alert my family when a message is risky</label>
-        <h3>Alerts for this family</h3>
+        <h2>Alerts for this family</h2>
         <ul id="alerts" class="list"><li class="muted">Enter a family code to see alerts.</li></ul>
       </section>
 
