@@ -5,5 +5,7 @@ export default defineConfig(({ mode }) => {
   // The hosted site must never ship the App Check debug token (anyone could reuse it to call the AI).
   // It uses reCAPTCHA Enterprise instead. The extension build (--mode extension) keeps the token.
   if (mode === 'production') process.env.VITE_APPCHECK_DEBUG_TOKEN = '';
+  // Extensions can't load the reCAPTCHA script, so the extension keeps working exactly as before.
+  if (mode === 'extension') process.env.VITE_RECAPTCHA_ENTERPRISE_KEY = '';
   return { base: './' };
 });
