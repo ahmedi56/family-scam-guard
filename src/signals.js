@@ -5,13 +5,19 @@
 const words = (src) => new RegExp(String.raw`(?<![\p{L}\d])(?:${src})(?![\p{L}\d])`, 'iu');
 
 export const SIGNALS = [
-  [words('urgent|immediately|within \\d+ ?(hours|minutes)|act now|last warning|urgent(e|ement)?|عاجل|فورا'), 'Pressure to act fast'],
-  [words('bvn|otp|pin|password|cvv|verification code|code de v[ée]rification|mot de passe|رمز'), 'Asks for a code, PIN or password'],
+  [words('urgent|immediately|within \\d+ ?(hours|minutes)|act now|last warning|urgent(e|ement)?|imm[ée]diatement|dernier avertissement|dans les \\d+ ?(heures|minutes)|عاجل|فورا'), 'Pressure to act fast'],
+  // Plain "password" or "PIN" is everyday text; only a request to hand one over counts.
+  [words('bvn|otp|cvv|verification code|code de v[ée]rification|رمز|(send|share|give|provide|enter|confirm|reply with|tell us|envoyez|donnez|communiquez)( me| us)?( your| the| votre| le)? (pin|password|code|mot de passe)'), 'Asks for a code, PIN or password'],
   [words('won|winner|prize|lottery|gagn[ée]|gagnant|loterie|ربحت|جائزة'), 'Prize or lottery claim'],
   [/\b(bit\.ly|tinyurl|t\.co|cutt\.ly|wa\.me)\/\S+/i, 'Shortened link hides the real address'],
-  [words('suspend(ed)?|blocked|locked|verify your account|compte (suspendu|bloqu[ée])|حسابك'), 'Threat that an account will be blocked'],
-  [words('send|transfer|virement|envoyer|gift ?card|western union|crypto|usdt'), 'Asks you to send money or gift cards'],
+  // A blocked build or pipeline is not a threat; a blocked account, card or SIM is.
+  [words('(account|card|sim|line|wallet|atm|bvn|compte|carte)( has been| is| will be| was)?( temporarily| permanently)? (suspended|blocked|locked|deactivated|closed|restricted|frozen)|verify your account|compte (suspendu|bloqu[ée])|حسابك'), 'Threat that an account will be blocked'],
+  [words('send( me| us)? (money|cash|funds|airtime|\\d[\\d,.]*k?)|(bank|wire) transfer|transfer (the )?(money|funds|fee)|virement|envoy(er|ez) (de l.argent|l.argent)|gift ?cards?|western union|moneygram|crypto|bitcoin|usdt'), 'Asks you to send money or gift cards'],
 ];
+
+// Signs that a message asks you to DO something risky. Scam alerts need at least one.
+const ACTION = new Set(['Asks for a code, PIN or password', 'Shortened link hides the real address', 'Asks you to send money or gift cards']);
+export const isScamShaped = (signals) => signals.length >= 3 && signals.some((s) => ACTION.has(s));
 
 export function matchSignals(text, extra = []) {
   return [...SIGNALS, ...extra].filter(([re]) => re.test(text)).map(([, label]) => label);

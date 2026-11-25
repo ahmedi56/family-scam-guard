@@ -3,7 +3,7 @@
 // offers an AI check, which runs in the extension popup through Firebase AI Logic (on-device first,
 // cloud fallback). The popup writes the verdict back to chrome.storage.local and Guardian shows it.
 (async () => {
-  const { matchSignals, flaggedIn, loadFlagged, describe, textKey, VERDICT_KEY } = await import(chrome.runtime.getURL('signals.js'));
+  const { matchSignals, isScamShaped, flaggedIn, loadFlagged, describe, textKey, VERDICT_KEY } = await import(chrome.runtime.getURL('signals.js'));
   let flagged = await loadFlagged();
 
   // ---- Guardian UI, in a closed shadow root so the page's CSS cannot break it ---------------
@@ -115,19 +115,18 @@
     bindButtons();
   });
 
-  // First reaction comes from the instant rules; the AI confirms on request.
+  // Only called for scam-shaped messages (see scan); the AI confirms on request.
   function react(block, text, signals, before) {
     current = { text, key: textKey(text), block };
     risky++;
     block.style.outline = '2px solid #dc2626';
     block.style.outlineOffset = '2px';
-    const scam = signals.length >= 3 || before.length > 0;
     const flags = [...signals, ...(before.length ? [`Flagged as a scam before: ${before.map(describe).join(', ')}`] : [])];
-    setState(scam ? 'bad' : 'warn', `<h3>${scam ? '🚨 This looks like a scam' : '⚠️ Be careful with this message'}</h3>
+    setState('bad', `<h3>🚨 This looks like a scam</h3>
       <q>${esc(text.slice(0, 90))}${text.length > 90 ? '…' : ''}</q><ul>${li(flags.map((f) => `🚩 ${f}`))}</ul>
       <p><b>Do not click links or send codes or money yet.</b></p>${buttons(true)}`);
     bindButtons();
-    if (scam) chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
+    chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
   }
 
   // The popup's AI verdict for the message Guardian asked about.
@@ -154,7 +153,7 @@
     const blocks = new Set();
     for (let n = walker.nextNode(), i = 0; n && i < 2000; n = walker.nextNode(), i++) {
       const el = n.parentElement;
-      if (!el || n.textContent.trim().length < 3 || el.closest('input,textarea,[contenteditable="true"],script,style')) continue;
+      if (!el || n.textContent.trim().length < 3 || el.closest('input,textarea,[contenteditable="true"],script,style,pre,code,.markdown-body')) continue;
       const block = el.closest(BLOCKS);
       if (block) blocks.add(block);
     }
@@ -165,7 +164,7 @@
       checked++;
       const signals = matchSignals(text);
       const before = flaggedIn(text, flagged);
-      if ((signals.length >= 2 || before.length) && !warned.has(text)) {
+      if ((isScamShaped(signals) || before.length) && !warned.has(text)) {
         warned.add(text);
         react(block, text, signals, before);
       }
