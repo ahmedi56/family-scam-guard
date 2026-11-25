@@ -5,7 +5,8 @@ service cloud.firestore {
     // the app writes, with bounded sizes. This stops spam text, oversized docs and malformed data
     // that would break other users' feeds.
     function shortText(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
-    function okReasons(v) { return v is list && v.size() <= 8; }
+    // hasAll() exists only on lists, so a string or map fails here even if the type check lets it through.
+    function okReasons(v) { return v is list && v.size() <= 8 && v.hasAll([]); }
 
     // Private scan history: only the (anonymous) owner.
     match /users/{uid}/scans/{id} {
