@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ext
+.env
+.env.*
+!.env.example
+.firebase
+# private working notes, not part of the app
+HANDOFF.md
+docs/HANDOFF.md
+founder/
+.claude/
+docs/SUBMISSION.md
+docs/DEMO_SCRIPT.md

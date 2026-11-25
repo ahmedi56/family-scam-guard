@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <title>Family Scam Guard</title>
+  </head>
+  <body>
+    <main id="app">
+      <header>
+        <div class="brand">
+          <img src="./icons/icon.svg" alt="" width="44" height="44" />
+          <div>
+            <h1>Family Scam Guard</h1>
+            <p class="tag">Paste a suspicious message. Checked on your device first.</p>
+          </div>
+        </div>
+        <span id="engine" class="badge">Engine: checking…</span>
+      </header>
+
+      <nav>
+        <button data-tab="check" class="active">Check</button>
+        <button data-tab="family">Family</button>
+        <button data-tab="community">Community</button>
+      </nav>
+
+      <section id="tab-check">
+        <textarea id="msg" rows="5" placeholder="Paste the SMS, WhatsApp message, email or link here…"></textarea>
+        <div class="row">
+          <button id="paste" class="ghost" type="button">📋 Paste</button>
+          <button id="clear" class="ghost" type="button">✖ Clear</button>
+          <label class="check fast"><input type="checkbox" id="cloudOnly" /> ⚡ Fast mode (cloud)</label>
+        </div>
+        <div class="row">
+          <label>Answer in
+            <select id="lang">
+              <option value="auto">Same as message</option>
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="ar">العربية</option>
+              <option value="pcm">Pidgin</option>
+            </select>
+          </label>
+          <small class="muted">Ctrl+Enter to check</small>
+        </div>
+        <button id="go" class="primary">Check message</button>
+        <div id="result" hidden></div>
+      </section>
+
+      <section id="tab-family" hidden>
+        <p>Share one family code. When the protected person gets a risky message, guardians see an alert (never the message itself).</p>
+        <label>Family code <input id="code" placeholder="e.g. mama-2026" /></label>
+        <label class="check"><input type="checkbox" id="notify" checked /> Alert my family when a message is risky</label>
+        <h3>Alerts for this family</h3>
+        <ul id="alerts" class="list"><li class="muted">Enter a family code to see alerts.</li></ul>
+      </section>
+
+      <section id="tab-community" hidden>
+        <p>Scam patterns reported by other users. Only the scam type and reasons are shared, never your messages.</p>
+        <ul id="community" class="list"><li class="muted">Nothing reported yet.</li></ul>
+      </section>
+
+      <footer>Not legal or financial advice. When in doubt, call the person or bank directly using a number you already trust.</footer>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

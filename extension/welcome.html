@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome to Guardian</title>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <style>
+    :root { --ink: #0f172a; --muted: #475569; --bg: #f1f5f9; --card: #fff; --line: #e2e8f0; }
+    @media (prefers-color-scheme: dark) { :root { --ink: #e2e8f0; --muted: #94a3b8; --bg: #0b1020; --card: #131a2e; --line: #263049; } }
+    body { margin: 0; font: 18px/1.6 system-ui, -apple-system, 'Segoe UI', sans-serif; color: var(--ink); background: var(--bg); }
+    header { padding: 32px 16px; color: #e2e8f0; background: linear-gradient(135deg, #0f172a, #1e1b4b); text-align: center; }
+    header img { width: 96px; height: 96px; border-radius: 24px; }
+    h1 { margin: 12px 0 4px; font-size: 1.8rem; } header p { margin: 0; color: #a5b4fc; }
+    main { max-width: 680px; margin: 0 auto; padding: 16px; }
+    section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; margin: 16px 0; }
+    h2 { margin: 0 0 8px; font-size: 1.2rem; } ul { padding-left: 22px; margin: 8px 0; } li { margin: 6px 0; }
+    .warn { border-left: 6px solid #f59e0b; } .muted { color: var(--muted); font-size: .95rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="icons/icon.svg" alt="" />
+    <h1>Guardian is now protecting this browser</h1>
+    <p>Family Scam Guard</p>
+  </header>
+  <main>
+    <section class="warn">
+      <h2>Why Chrome said "read and change all your data on all websites"</h2>
+      <p>Scam messages can arrive on any website: WhatsApp Web, Gmail, Facebook and others. To warn you, Guardian has to look at the messages on the page you are reading.</p>
+      <ul>
+        <li><b>It reads only on this computer.</b> Guardian checks messages with simple rules on your own device. Nothing is sent anywhere while it watches.</li>
+        <li><b>It never saves or shares your messages.</b> It only remembers the phone numbers and links of scams you checked, on this computer, so it can warn you if they come back.</li>
+        <li><b>It only changes the page to warn you:</b> a red outline around a risky message, and Guardian in the corner.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>How Guardian works</h2>
+      <ul>
+        <li>🟡 <b>Watching:</b> Guardian sits quietly in the bottom-right corner.</li>
+        <li>⚠️ <b>Be careful / 🚨 Scam:</b> a message shows warning signs. Guardian reacts right away and shows why.</li>
+        <li>🔵 <b>Checking:</b> press "Check with AI". The AI runs on your device first (Gemini Nano) and uses the cloud only if needed.</li>
+        <li>✅ <b>Safe:</b> the AI found no scam signs and tells you why.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Setting it up for a parent?</h2>
+      <p>Open the Family Scam Guard icon in the toolbar, go to <b>Family</b>, and enter a family code. When Guardian finds a risky message, you get an alert. You never see the message itself.</p>
+    </section>
+    <p class="muted">Not legal or financial advice. When in doubt, call the person or bank on a number you already trust.</p>
+  </main>
+</body>
+</html>

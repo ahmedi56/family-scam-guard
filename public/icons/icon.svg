@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+    <linearGradient id="wingLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5EEAD4"/>
+      <stop offset="100%" stop-color="#0D9488"/>
+    </linearGradient>
+    <linearGradient id="wingRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="beacon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="116" fill="url(#bg2)"/>
+  <path d="M 244 96 C 156 120 118 192 126 284 C 132 346 172 394 232 418 L 232 344 C 198 324 184 286 184 242 C 184 186 208 144 244 122 Z" fill="url(#wingLeft)"/>
+  <path d="M 268 96 C 356 120 394 192 386 284 C 380 346 340 394 280 418 L 280 344 C 314 324 328 286 328 242 C 328 186 304 144 268 122 Z" fill="url(#wingRight)"/>
+  <circle cx="256" cy="256" r="38" fill="url(#beacon)"/>
+  <circle cx="256" cy="256" r="62" fill="#F59E0B" opacity="0.18"/>
+</svg>

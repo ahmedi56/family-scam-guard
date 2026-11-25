@@ -1,0 +1,34 @@
+{
+  "name": "family-scam-guard",
+  "version": "0.3.0",
+  "description": "Scam checker for families: on-device first with cloud fallback (Firebase AI Logic hybrid inference), plus the Guardian Chrome extension that watches messages in real time.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:ext": "vite build --outDir dist-ext && node scripts/copy-ext.mjs",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "firebase",
+    "firebase-ai-logic",
+    "gemini-nano",
+    "on-device-ai",
+    "chrome-extension",
+    "scam-detection",
+    "pwa"
+  ],
+  "author": "ahmedi56",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "firebase": "^13.4.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.8"
+  },
+  "private": true,
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahmedi56/family-scam-guard.git"
+  }
+}
