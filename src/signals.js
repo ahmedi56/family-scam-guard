@@ -1,13 +1,16 @@
 // Rule-based scam signals and "remembered scammer" helpers. No imports on purpose: the extension's
 // content script loads this same file on every website, so it must stay plain and fast.
 
+// Whole-word match that works for accented and Arabic letters (JS \b only knows ASCII letters).
+const words = (src) => new RegExp(String.raw`(?<![\p{L}\d])(?:${src})(?![\p{L}\d])`, 'iu');
+
 export const SIGNALS = [
-  [/\b(urgent|immediately|within \d+ ?(hours|minutes)|act now|last warning|urgent(e|ement)?|عاجل|فورا)\b/i, 'Pressure to act fast'],
-  [/\b(bvn|otp|pin|password|cvv|verification code|code de v[ée]rification|mot de passe|رمز)\b/i, 'Asks for a code, PIN or password'],
-  [/\b(won|winner|prize|lottery|gagn[ée]|gagnant|loterie|ربحت|جائزة)\b/i, 'Prize or lottery claim'],
+  [words('urgent|immediately|within \\d+ ?(hours|minutes)|act now|last warning|urgent(e|ement)?|عاجل|فورا'), 'Pressure to act fast'],
+  [words('bvn|otp|pin|password|cvv|verification code|code de v[ée]rification|mot de passe|رمز'), 'Asks for a code, PIN or password'],
+  [words('won|winner|prize|lottery|gagn[ée]|gagnant|loterie|ربحت|جائزة'), 'Prize or lottery claim'],
   [/\b(bit\.ly|tinyurl|t\.co|cutt\.ly|wa\.me)\/\S+/i, 'Shortened link hides the real address'],
-  [/\b(suspend(ed)?|blocked|locked|verify your account|compte (suspendu|bloqu[ée])|حسابك)\b/i, 'Threat that an account will be blocked'],
-  [/\b(send|transfer|virement|envoyer|gift ?card|western union|crypto|usdt)\b/i, 'Asks you to send money or gift cards'],
+  [words('suspend(ed)?|blocked|locked|verify your account|compte (suspendu|bloqu[ée])|حسابك'), 'Threat that an account will be blocked'],
+  [words('send|transfer|virement|envoyer|gift ?card|western union|crypto|usdt'), 'Asks you to send money or gift cards'],
 ];
 
 export function matchSignals(text, extra = []) {

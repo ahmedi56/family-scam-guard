@@ -1,4 +1,9 @@
 import { defineConfig } from 'vite';
 
 // base './' so the same build works on Firebase Hosting, as a PWA and inside a Chrome extension popup.
-export default defineConfig({ base: './' });
+export default defineConfig(({ mode }) => {
+  // The hosted site must never ship the App Check debug token (anyone could reuse it to call the AI).
+  // It uses reCAPTCHA Enterprise instead. The extension build (--mode extension) keeps the token.
+  if (mode === 'production') process.env.VITE_APPCHECK_DEBUG_TOKEN = '';
+  return { base: './' };
+});

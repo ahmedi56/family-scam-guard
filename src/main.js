@@ -170,7 +170,7 @@ async function runCheck() {
     out.className = `result ${v.cls}`;
     out.innerHTML = `
       <h2>${v.icon} ${v.label} <small>${r.confidence}%</small></h2>
-      <p><b>${esc(r.category)}</b></p>
+      ${/^(none|aucun|لا شيء)?$/i.test(r.category.trim()) ? '' : `<p><b>${esc(r.category)}</b></p>`}
       ${r.reasons.length ? `<ul>${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${flagsHtml(r.signals)}
       ${seenBefore.length ? `<p class="flags">🚩 Flagged as a scam before: ${esc(seenBefore.map(describe).join(', '))}</p>` : ''}

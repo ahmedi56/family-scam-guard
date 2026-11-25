@@ -1,0 +1,10 @@
+import assert from 'node:assert';
+const { matchSignals, whySafe, indicators } = await import("../src/signals.js");
+const ar = matchSignals('\u0645\u0628\u0631\u0648\u0643! \u0631\u0628\u062d\u062a \u062c\u0627\u0626\u0632\u0629. \u0623\u0631\u0633\u0644 \u0631\u0645\u0632 \u0627\u0644\u062a\u062d\u0642\u0642 \u0639\u0627\u062c\u0644');
+console.log(ar); assert(ar.length >= 3);
+assert.equal(matchSignals('Hello, the meeting tomorrow is moved to 3pm.').length, 0);
+assert(matchSignals('URGENT: send the OTP now').length >= 2);
+assert.equal(matchSignals('Votre compte bloqué, envoyer le mot de passe').length, 3);
+assert.equal(whySafe('Hi mum, dinner at 7?').length, 3);
+assert(indicators('call +234 803 555 1234').length === 1);
+console.log('signals ok');

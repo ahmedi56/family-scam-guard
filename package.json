@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:ext": "vite build --outDir dist-ext && node scripts/copy-ext.mjs",
-    "preview": "vite preview"
+    "build:ext": "vite build --mode extension --outDir dist-ext && node scripts/copy-ext.mjs",
+    "preview": "vite preview",
+    "test": "node scripts/test-signals.mjs"
   },
   "keywords": [
     "firebase",
