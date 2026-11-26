@@ -10,6 +10,22 @@ assert(scam('Oga, I don win lottery for you. Send 5k make I release your prize n
 assert(scam('Votre compte bloqué! Envoyez votre code de vérification immédiatement'));
 assert(scam('مبروك! ربحت جائزة. أرسل رمز التحقق عاجل'));
 
+// A dangerous link alone is enough.
+assert(scam('Your parcel is waiting: http://dhl-delivery-fee.xyz/pay'));
+assert(scam('Log in here to keep your account: paypal-secure-login.com/verify'));
+assert(scam('See the photos http://45.77.12.9/album'));
+assert(!scam('Router settings: http://192.168.1.1/admin'), 'home router flagged');
+assert(scam('Open https://xn--pypal-4ve.com/login'));
+assert(scam('Click http://www.paypal.com@evil.example/login'));
+
+// Real brand websites and ordinary links stay quiet.
+for (const t of [
+  'Your PayPal receipt: https://www.paypal.com/myaccount/transactions',
+  'Track it at https://www.dhl.com/track?id=123 and see you soon',
+  'Docs: https://developer.apple.com/documentation and https://groups.google.com/g/test',
+  'Join the call at https://meet.google.com/abc-defg-hij',
+]) assert(!scam(t), `false alarm on: ${t}`);
+
 // Everyday and developer text (GitHub, docs, chats): Guardian must stay quiet.
 for (const t of [
   'We send you a notification when the build is blocked. Act now to update your password settings.',

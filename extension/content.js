@@ -3,7 +3,7 @@
 // offers an AI check, which runs in the extension popup through Firebase AI Logic (on-device first,
 // cloud fallback). The popup writes the verdict back to chrome.storage.local and Guardian shows it.
 (async () => {
-  const { matchSignals, isScamShaped, flaggedIn, loadFlagged, describe, textKey, VERDICT_KEY } = await import(chrome.runtime.getURL('signals.js'));
+  const { matchSignals, isScamShaped, linkRisks, flaggedIn, loadFlagged, describe, textKey, VERDICT_KEY } = await import(chrome.runtime.getURL('signals.js'));
   let flagged = await loadFlagged();
 
   // ---- Guardian UI, in a closed shadow root so the page's CSS cannot break it ---------------
@@ -132,7 +132,7 @@
 
   // Say hello once, so a new user knows Guardian is alive and what it does.
   chrome.storage.local.get('fsg-greeted').then(({ 'fsg-greeted': greeted }) => {
-    if (greeted || current) return;
+    if (greeted || current || risky) return;
     chrome.storage.local.set({ 'fsg-greeted': true });
     setState('watch', `<h3>${ic('hand')}Hi, I am Guardian</h3><p>I watch the messages on the pages you visit and warn you when one looks like a scam. Click me any time to see what I have checked.</p>${buttons(false)}`);
     bindButtons();
@@ -185,7 +185,9 @@
       if (text.length < 25 || text.length > 1500 || seen.get(block) === text) continue;
       seen.set(block, text);
       checked++;
-      const signals = matchSignals(text);
+      // Also read where links really go: an email's "Click here" can hide a fake address.
+      const hrefs = [...block.querySelectorAll('a[href^="http"]')].slice(0, 20).map((a) => a.href).join(' ');
+      const signals = matchSignals(`${text} ${hrefs}`);
       const before = flaggedIn(text, flagged);
       if ((isScamShaped(signals) || before.length) && !warned.has(text)) {
         warned.add(text);
@@ -211,6 +213,16 @@
   });
 
   setState('watch');
+  // Is the website itself fake? (an address copying a bank or brand, a bare number address, look-alike letters)
+  const siteRisks = linkRisks(location.href);
+  if (siteRisks.length) {
+    risky++;
+    setState('bad', `<h3>${ic('scam')}This website may be fake</h3><p class="meta">${esc(location.hostname)}</p>
+      <ul class="f">${siteRisks.map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
+      <p><b>Do not enter passwords, codes or card details on this site.</b></p>${buttons(false)}`);
+    bindButtons();
+    chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
+  }
   scan(document.body);
   // Rescan only what changes (new chat messages, new emails), at most every 700 ms.
   const pending = new Set();

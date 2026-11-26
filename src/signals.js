@@ -15,12 +15,54 @@ export const SIGNALS = [
   [words('send( me| us)? (money|cash|funds|airtime|\\d[\\d,.]*k?)|(bank|wire) transfer|transfer (the )?(money|funds|fee)|virement|envoy(er|ez) (de l.argent|l.argent)|gift ?cards?|western union|moneygram|crypto|bitcoin|usdt'), 'Asks you to send money or gift cards'],
 ];
 
+// ---- dangerous links: a fake-brand, raw-IP or look-alike address is a scam on its own ----------
+// Brand word in the address -> the only domains that brand really uses.
+const BRANDS = {
+  paypal: ['paypal.com', 'paypal-community.com', 'paypalobjects.com'], apple: ['apple.com', 'icloud.com'], icloud: ['icloud.com', 'apple.com'],
+  amazon: ['amazon.com', 'amazon.fr', 'amazon.co.uk', 'amazon.de', 'amazonaws.com'], microsoft: ['microsoft.com', 'live.com', 'office.com'],
+  netflix: ['netflix.com'], whatsapp: ['whatsapp.com', 'whatsapp.net'], facebook: ['facebook.com', 'fb.com'], instagram: ['instagram.com'],
+  dhl: ['dhl.com', 'dhl.de', 'dhl.fr'], fedex: ['fedex.com'], ups: ['ups.com'], mtn: ['mtn.ng', 'mtn.com', 'mtnonline.com'], opay: ['opayweb.com'],
+  gtbank: ['gtbank.com'], firstbank: ['firstbanknigeria.com'], zenithbank: ['zenithbank.com'], accessbank: ['accessbankplc.com'],
+  binance: ['binance.com'], laposte: ['laposte.fr', 'laposte.tn'],
+};
+const NAMES = { paypal: 'PayPal', icloud: 'iCloud', whatsapp: 'WhatsApp', gtbank: 'GTBank', mtn: 'MTN', dhl: 'DHL', ups: 'UPS', fedex: 'FedEx', laposte: 'La Poste' };
+const URLS = /\bhttps?:\/\/[^\s"'<>]+|\bwww\.[^\s"'<>]+|(?<![@\w.-])[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|info|xyz|top|click|live|site|online|shop|store|ng|tn|co|io|me|cc|vip|icu|buzz|cfd|sbs)(?:\/[^\s"'<>]*)?/gi;
+
+function hostOf(raw) {
+  try {
+    return new URL(/^https?:\/\//i.test(raw) ? raw : `http://${raw}`).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+}
+
+// Labels all start with "Link " so isScamShaped can treat them as dangerous on their own.
+export function linkRisks(text) {
+  const out = new Set();
+  for (const [raw] of String(text).matchAll(URLS)) {
+    if (/^https?:\/\/[^/]*@/i.test(raw)) out.add('Link hides its real address');
+    const host = hostOf(raw);
+    if (!host) continue;
+    // Home routers and local devices (192.168.x, 10.x, 127.x) use number addresses legitimately.
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) && !/^(10|127)\.|^192\.168\.|^172\.(1[6-9]|2\d|3[01])\./.test(host)) out.add('Link goes to a bare number address, not a real website');
+    if (host.split('.').some((l) => l.startsWith('xn--'))) out.add('Link uses look-alike letters to copy a real website');
+    for (const token of host.split(/[.-]/)) {
+      const official = BRANDS[token];
+      if (official && !official.some((d) => host === d || host.endsWith(`.${d}`))) {
+        out.add(`Link pretends to be ${NAMES[token] || token[0].toUpperCase() + token.slice(1)} but is not their website`);
+      }
+    }
+  }
+  return [...out];
+}
+
 // Signs that a message asks you to DO something risky. Scam alerts need at least one.
 const ACTION = new Set(['Asks for a code, PIN or password', 'Shortened link hides the real address', 'Asks you to send money or gift cards']);
-export const isScamShaped = (signals) => signals.length >= 3 && signals.some((s) => ACTION.has(s));
+export const isScamShaped = (signals) =>
+  signals.some((s) => s.startsWith('Link ')) || (signals.length >= 3 && signals.some((s) => ACTION.has(s)));
 
 export function matchSignals(text, extra = []) {
-  return [...SIGNALS, ...extra].filter(([re]) => re.test(text)).map(([, label]) => label);
+  return [...[...SIGNALS, ...extra].filter(([re]) => re.test(text)).map(([, label]) => label), ...linkRisks(text)];
 }
 
 // Plain-language reasons a message looks safe, built from what is NOT in it.

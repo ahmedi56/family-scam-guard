@@ -1,6 +1,6 @@
 {
   "name": "family-scam-guard",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Scam checker for families: on-device first with cloud fallback (Firebase AI Logic hybrid inference), plus the Guardian Chrome extension that watches messages in real time.",
   "scripts": {
     "dev": "vite",
