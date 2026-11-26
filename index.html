@@ -21,6 +21,36 @@
         <span id="engine" class="badge" role="status">Engine: checking…</span>
       </header>
 
+      <section id="landing" class="landing" hidden aria-label="About Family Scam Guard">
+        <h2 class="hero">Know if it's a scam <span>before you reply.</span></h2>
+        <p class="lead">A friendly guardian checks your messages on your own device first, warns you about scams, and quietly tells your family.</p>
+        <div class="cta">
+          <a class="primary" href="#tab-check">Try it now</a>
+          <a class="ghost" href="#install">Add Guardian to Chrome</a>
+        </div>
+
+        <div class="video" id="demo">
+          <!-- Replace with the YouTube embed once the demo video is uploaded. -->
+          <p>🎬 Demo video coming soon</p>
+        </div>
+
+        <ul class="points">
+          <li><b>🔒 Private</b><span>AI runs on your device first. Messages are never stored.</span></li>
+          <li><b>🤖 Always watching</b><span>Guardian pops up only when a message looks like a scam.</span></li>
+          <li><b>👪 Family alerts</b><span>Your family gets the warning, never the message.</span></li>
+        </ul>
+
+        <div class="install" id="install">
+          <h2>Add Guardian to Chrome in 4 steps</h2>
+          <ol>
+            <li><a href="https://github.com/ahmedi56/family-scam-guard/releases/latest">Download the extension zip</a> and unzip it.</li>
+            <li>Open <code>chrome://extensions</code> in Chrome.</li>
+            <li>Turn on <b>Developer mode</b> (top right).</li>
+            <li>Click <b>Load unpacked</b> and pick the unzipped folder. Done: Guardian is watching.</li>
+          </ol>
+        </div>
+      </section>
+
       <nav aria-label="Sections">
         <button data-tab="check" class="active" aria-pressed="true">Check</button>
         <button data-tab="family" aria-pressed="false">Family</button>
@@ -28,6 +58,10 @@
       </nav>
 
       <section id="tab-check">
+        <div id="scanBox" class="scanbox" hidden>
+          <button id="scanPage" class="primary" type="button">🛡️ Scan this page</button>
+          <p id="scanStatus" class="where" role="status"></p>
+        </div>
         <label for="msg" class="sr-only">Message to check</label>
         <textarea id="msg" rows="5" placeholder="Paste the SMS, WhatsApp message, email or link here…"></textarea>
         <div class="row">

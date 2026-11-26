@@ -33,7 +33,10 @@
     @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
     @keyframes pulse{50%{transform:scale(1.35);opacity:.6}} @keyframes sweep{to{transform:translateY(40px)}}
     @keyframes hop{40%{transform:translateY(-18px)}} @keyframes shake{25%{transform:translateX(-7px) rotate(-3deg)}75%{transform:translateX(7px) rotate(3deg)}}
-    @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+    .g,svg{transition:width .3s,height .3s,opacity .3s}
+    .mini .g,.mini svg{width:44px;height:44px} .mini .g{opacity:.75} .mini .g:hover,.mini .g:focus-visible{opacity:1}
+    .mini #f,.mini #shadow,.mini #tip,.mini #eyes{animation:none}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
   <div class="w watch">
     <div class="b" role="status" aria-live="polite" hidden></div>
@@ -78,7 +81,8 @@
 
   let current = null; // { text, key, block } the message Guardian is talking about
   function setState(state, html) {
-    wrap.className = `w ${state}`;
+    // Quiet by default: a small still button until there is something to say.
+    wrap.className = `w ${state}${state === 'watch' && !html ? ' mini' : ''}`;
     wrap.style.setProperty('--c', COLORS[state]);
     root.querySelectorAll('.eye').forEach((e) => e.setAttribute('fill', EYES[state]));
     bubble.hidden = !html;
@@ -145,7 +149,7 @@
   });
 
   // ---- page scanning ---------------------------------------------------------------------------
-  const seen = new WeakMap(); // block -> text already scanned
+  let seen = new WeakMap(); // block -> text already scanned
   const warned = new Set(); // texts Guardian already reacted to on this page
   const BLOCKS = 'p,li,td,blockquote,article,[role="row"],[role="listitem"],[data-pre-plain-text],div';
 
@@ -171,6 +175,22 @@
       }
     }
   }
+
+  // "Scan this page" from the extension popup: re-read everything and always answer.
+  chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
+    if (msg?.type !== 'scan-page') return;
+    seen = new WeakMap();
+    warned.clear();
+    checked = 0;
+    const before = risky;
+    scan(document.body);
+    const found = risky - before;
+    if (!found) {
+      setState('ok', `<h3>✅ No scam signs on this page</h3><p>I checked <b>${checked}</b> message${checked === 1 ? '' : 's'} and found nothing suspicious.</p>${buttons(false)}`);
+      bindButtons();
+    }
+    reply({ checked, found });
+  });
 
   setState('watch');
   scan(document.body);

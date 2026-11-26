@@ -232,6 +232,28 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
+// ---- "Scan this page" (extension popup only): ask Guardian on the open tab to re-check it ----
+if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+  $('scanBox').hidden = false;
+  $('scanPage').addEventListener('click', async () => {
+    const status = $('scanStatus');
+    status.textContent = 'Guardian is scanning the page…';
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const r = await chrome.tabs.sendMessage(tab.id, { type: 'scan-page' });
+      status.textContent = r.found
+        ? `🚨 Guardian found ${r.found} message${r.found === 1 ? '' : 's'} that look like a scam. Look at the page.`
+        : `✅ Guardian checked ${r.checked} message${r.checked === 1 ? '' : 's'}: no scam signs.`;
+    } catch {
+      // No content script there: chrome:// pages, the Web Store, or a tab opened before install.
+      status.textContent = "Guardian can't read this page. Chrome blocks extensions on its own pages; on other sites, reload the page and try again.";
+    }
+  });
+}
+
+// The landing section is for the hosted website only, not the extension popup.
+if (location.protocol.startsWith('http')) $('landing').hidden = false;
+
 initEngine();
 bindFamily();
 loadPendingSelection();
