@@ -6,6 +6,7 @@ export default defineConfig(({ mode }) => {
   // It uses reCAPTCHA Enterprise instead. The extension build (--mode extension) keeps the token.
   if (mode === 'production') process.env.VITE_APPCHECK_DEBUG_TOKEN = '';
   // Extensions can't load the reCAPTCHA script, so the extension keeps working exactly as before.
-  if (mode === 'extension') process.env.VITE_RECAPTCHA_ENTERPRISE_KEY = '';
+  // 'judges' is the public zip: same as the extension, but with its own revocable token from .env.judges.
+  if (mode === 'extension' || mode === 'judges') process.env.VITE_RECAPTCHA_ENTERPRISE_KEY = '';
   return { base: './' };
 });

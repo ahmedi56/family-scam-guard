@@ -12,3 +12,5 @@ founder/
 .claude/
 docs/SUBMISSION.md
 docs/DEMO_SCRIPT.md
+dist-judges
+*.zip
