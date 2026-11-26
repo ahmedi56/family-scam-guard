@@ -16,6 +16,9 @@
     section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; margin: 16px 0; }
     h2 { margin: 0 0 8px; font-size: 1.2rem; } ul { padding-left: 22px; margin: 8px 0; } li { margin: 6px 0; }
     .warn { border-left: 6px solid #f59e0b; } .muted { color: var(--muted); font-size: .95rem; }
+    :root { color-scheme: light dark; } h1, h2 { text-wrap: balance; }
+    .states { list-style: none; padding: 0; } .states li { display: flex; gap: 10px; align-items: flex-start; }
+    .i { width: 1.3em; height: 1.3em; flex: none; margin-top: .15em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   </style>
 </head>
 <body>
@@ -36,11 +39,11 @@
     </section>
     <section>
       <h2>How Guardian works</h2>
-      <ul>
-        <li>🟡 <b>Watching:</b> Guardian sits quietly in the bottom-right corner.</li>
-        <li>⚠️ <b>Be careful / 🚨 Scam:</b> a message shows warning signs. Guardian reacts right away and shows why.</li>
-        <li>🔵 <b>Checking:</b> press "Check with AI". The AI runs on your device first (Gemini Nano) and uses the cloud only if needed.</li>
-        <li>✅ <b>Safe:</b> the AI found no scam signs and tells you why.</li>
+      <ul class="states">
+        <li><svg class="i" style="color:#0f766e" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg><span><b>Watching:</b> Guardian stays small and quiet in the bottom-right corner.</span></li>
+        <li><svg class="i" style="color:#dc2626" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span><b>Scam:</b> a message shows scam signs. Guardian grows, warns you right away and shows why.</span></li>
+        <li><svg class="i" style="color:#0369a1" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span><b>Checking:</b> press “Check with AI”. The AI runs on your device first (Gemini Nano) and uses the cloud only if needed.</span></li>
+        <li><svg class="i" style="color:#047857" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span><b>Safe:</b> the AI found no scam signs and tells you why. Use “Scan This Page” in the toolbar popup any time.</span></li>
       </ul>
     </section>
     <section>

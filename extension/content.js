@@ -9,7 +9,7 @@
   // ---- Guardian UI, in a closed shadow root so the page's CSS cannot break it ---------------
   const host = document.createElement('div');
   host.id = 'fsg-host';
-  host.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647';
+  host.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;pointer-events:none'; // only the robot and bubble take clicks
   const root = host.attachShadow({ mode: 'closed' });
   root.innerHTML = `<style>
     :host{all:initial}
@@ -33,8 +33,13 @@
     @keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
     @keyframes pulse{50%{transform:scale(1.35);opacity:.6}} @keyframes sweep{to{transform:translateY(40px)}}
     @keyframes hop{40%{transform:translateY(-18px)}} @keyframes shake{25%{transform:translateX(-7px) rotate(-3deg)}75%{transform:translateX(7px) rotate(3deg)}}
-    .g,svg{transition:width .3s,height .3s,opacity .3s}
-    .mini .g,.mini svg{width:44px;height:44px} .mini .g{opacity:.75} .mini .g:hover,.mini .g:focus-visible{opacity:1}
+    .i{width:1.15em;height:1.15em;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;margin-right:6px}
+    .b h3{display:flex;align-items:center} .b ul.f{list-style:none;padding:0} .b ul.f li{display:flex;align-items:flex-start;margin:3px 0} .b ul.f .i{color:#b91c1c;margin-top:.15em}
+    .meta{display:flex;align-items:center;font-size:12px;color:#64748b}
+    .w{pointer-events:none} .b,.g{pointer-events:auto}
+    /* Quiet state: shrink with transform only (no layout animation); hit area shrinks with it. */
+    .g{transform-origin:bottom right;transition:transform .3s,opacity .3s}
+    .mini .g{transform:scale(.46);opacity:.75} .mini .g:hover,.mini .g:focus-visible{opacity:1}
     .mini #f,.mini #shadow,.mini #tip,.mini #eyes{animation:none}
     @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
@@ -88,6 +93,19 @@
     bubble.hidden = !html;
     bubble.innerHTML = html || '';
   }
+  // Same outline icons as the app (the shadow root can't use the popup's SVG sprite).
+  const P = {
+    scam: '<path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/>',
+    warn: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    safe: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    flag: '<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    cloud: '<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    hand: '<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+    search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  };
+  const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
   const li = (items) => items.map((s) => `<li>${esc(s)}</li>`).join('');
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
   const buttons = (check) => `${check ? '<button class="go">Check with AI</button>' : ''}<button class="x">OK</button>`;
@@ -95,7 +113,7 @@
   function bindButtons() {
     root.querySelector('.x')?.addEventListener('click', () => setState('watch'));
     root.querySelector('.go')?.addEventListener('click', () => {
-      setState('scan', '<h3>Checking…</h3><p>I am asking the AI, on your device first. The message stays private.</p>');
+      setState('scan', `<h3>${ic('search')}Checking…</h3><p>I am asking the AI, on your device first. The message stays private.</p>`);
       chrome.runtime.sendMessage({ type: 'check', text: current.text });
       current.block.scrollIntoView({ block: 'center', behavior: 'smooth' });
     });
@@ -106,7 +124,7 @@
     setState('watch', `<h3>Guardian is watching</h3>
       <p>I have checked <b>${checked}</b> message${checked === 1 ? '' : 's'} on this page${risky ? `, and <b>${risky}</b> looked risky` : '. Nothing risky so far'}.</p>
       <p>I react on my own when a message shows scam signs. To check any text yourself, select it, right-click, and choose <b>Check with Family Scam Guard</b>.</p>
-      <p style="font-size:12px;color:#64748b">🔒 I read only on this computer and never save or share your messages.</p>${buttons(false)}`);
+      <p class="meta">${ic('lock')}I read only on this computer and never save or share your messages.</p>${buttons(false)}`);
     bindButtons();
   });
   let checked = 0;
@@ -116,7 +134,7 @@
   chrome.storage.local.get('fsg-greeted').then(({ 'fsg-greeted': greeted }) => {
     if (greeted || current) return;
     chrome.storage.local.set({ 'fsg-greeted': true });
-    setState('watch', `<h3>👋 Hi, I am Guardian</h3><p>I watch the messages on the pages you visit and warn you when one looks like a scam. Click me any time to see what I have checked.</p>${buttons(false)}`);
+    setState('watch', `<h3>${ic('hand')}Hi, I am Guardian</h3><p>I watch the messages on the pages you visit and warn you when one looks like a scam. Click me any time to see what I have checked.</p>${buttons(false)}`);
     bindButtons();
   });
 
@@ -127,8 +145,8 @@
     block.style.outline = '2px solid #dc2626';
     block.style.outlineOffset = '2px';
     const flags = [...signals, ...(before.length ? [`Flagged as a scam before: ${before.map(describe).join(', ')}`] : [])];
-    setState('bad', `<h3>🚨 This looks like a scam</h3>
-      <q>${esc(text.slice(0, 90))}${text.length > 90 ? '…' : ''}</q><ul>${li(flags.map((f) => `🚩 ${f}`))}</ul>
+    setState('bad', `<h3>${ic('scam')}This looks like a scam</h3>
+      <q>${esc(text.slice(0, 90))}${text.length > 90 ? '…' : ''}</q><ul class="f">${flags.map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
       <p><b>Do not click links or send codes or money yet.</b></p>${buttons(true)}`);
     bindButtons();
     chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
@@ -141,10 +159,10 @@
     const v = changes[VERDICT_KEY]?.newValue;
     if (!v || !current || v.key !== current.key) return;
     const state = v.verdict === 'safe' ? 'ok' : v.verdict === 'scam' ? 'bad' : 'warn';
-    const title = v.verdict === 'safe' ? '✅ The AI says this looks safe' : v.verdict === 'scam' ? '🚨 The AI confirms: likely a scam' : '⚠️ The AI says: be careful';
+    const title = v.verdict === 'safe' ? `${ic('safe')}The AI says this looks safe` : v.verdict === 'scam' ? `${ic('scam')}The AI confirms: likely a scam` : `${ic('warn')}The AI says: be careful`;
     if (state === 'ok') current.block.style.outline = '2px solid #059669';
     setState(state, `<h3>${title}</h3><ul>${li(v.reasons || [])}</ul><p><b>${esc(v.advice || '')}</b></p>
-      <p style="font-size:12px;color:#64748b">${v.source === 'on_device' ? '🔒 Checked on your device' : v.source === 'cache' ? '⚡ Checked before' : '☁️ Checked in the cloud'}</p>${buttons(false)}`);
+      <p class="meta">${v.source === 'on_device' ? `${ic('lock')}Checked on your device` : v.source === 'cache' ? `${ic('clock')}Checked before` : `${ic('cloud')}Checked in the cloud`}</p>${buttons(false)}`);
     bindButtons();
   });
 
@@ -186,7 +204,7 @@
     scan(document.body);
     const found = risky - before;
     if (!found) {
-      setState('ok', `<h3>✅ No scam signs on this page</h3><p>I checked <b>${checked}</b> message${checked === 1 ? '' : 's'} and found nothing suspicious.</p>${buttons(false)}`);
+      setState('ok', `<h3>${ic('safe')}No scam signs on this page</h3><p>I checked <b>${checked}</b> message${checked === 1 ? '' : 's'} and found nothing suspicious.</p>${buttons(false)}`);
       bindButtons();
     }
     reply({ checked, found });

@@ -9,42 +9,66 @@
     <title>Family Scam Guard</title>
   </head>
   <body>
+    <!-- One outline icon set (Lucide-style, 24px grid) used everywhere instead of emoji. -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></symbol>
+      <symbol id="i-clipboard" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></symbol>
+      <symbol id="i-zap" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+      <symbol id="i-scam" viewBox="0 0 24 24"><path d="M12 16h.01"/><path d="M12 8v4"/><path d="M15.312 2a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586l-4.688-4.688A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2z"/></symbol>
+      <symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+      <symbol id="i-safe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+      <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+      <symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    </svg>
+
+    <a class="skip" href="#tab-check">Skip to the message checker</a>
+
     <main id="app">
       <header>
         <div class="brand">
-          <img src="./icons/icon.svg" alt="" width="44" height="44" />
-          <div>
-            <h1>Family Scam Guard</h1>
-            <p class="tag">Paste a suspicious message. Checked on your device first.</p>
-          </div>
+          <img src="./icons/icon.svg" alt="" width="40" height="40" />
+          <h1 translate="no">Family Scam Guard</h1>
         </div>
-        <span id="engine" class="badge" role="status">Engine: checking…</span>
+        <span id="engine" class="pill" role="status">Getting ready…</span>
       </header>
 
       <section id="landing" class="landing" hidden aria-label="About Family Scam Guard">
         <h2 class="hero">Know if it's a scam <span>before you reply.</span></h2>
         <p class="lead">A friendly guardian checks your messages on your own device first, warns you about scams, and quietly tells your family.</p>
         <div class="cta">
-          <a class="primary" href="#tab-check">Try it now</a>
-          <a class="ghost" href="#install">Add Guardian to Chrome</a>
+          <a class="primary" href="#tab-check"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg>Try It Now</a>
+          <a class="ghost" href="#install"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>Add Guardian to Chrome</a>
         </div>
 
         <div class="video" id="demo">
           <!-- Replace with the YouTube embed once the demo video is uploaded. -->
-          <p>🎬 Demo video coming soon</p>
+          <p><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Demo video coming soon</p>
         </div>
 
         <ul class="points">
-          <li><b>🔒 Private</b><span>AI runs on your device first. Messages are never stored.</span></li>
-          <li><b>🤖 Always watching</b><span>Guardian pops up only when a message looks like a scam.</span></li>
-          <li><b>👪 Family alerts</b><span>Your family gets the warning, never the message.</span></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg></span><div><b>Private</b><span>AI runs on your device first. Messages are never stored.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-bot"/></svg></span><div><b>Always watching</b><span>Guardian pops up only when a message looks like a scam.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></span><div><b>Family alerts</b><span>Your family gets the warning, never the message.</span></div></li>
         </ul>
 
         <div class="install" id="install">
           <h2>Add Guardian to Chrome in 4 steps</h2>
           <ol>
             <li><a href="https://github.com/ahmedi56/family-scam-guard/releases/latest">Download the extension zip</a> and unzip it.</li>
-            <li>Open <code>chrome://extensions</code> in Chrome.</li>
+            <li>Open <code translate="no">chrome://extensions</code> in Chrome.</li>
             <li>Turn on <b>Developer mode</b> (top right).</li>
             <li>Click <b>Load unpacked</b> and pick the unzipped folder. Done: Guardian is watching.</li>
           </ol>
@@ -57,20 +81,27 @@
         <button data-tab="community" aria-pressed="false">Community</button>
       </nav>
 
-      <section id="tab-check">
+      <section id="tab-check" tabindex="-1">
         <div id="scanBox" class="scanbox" hidden>
-          <button id="scanPage" class="primary" type="button">🛡️ Scan this page</button>
+          <button id="scanPage" class="primary" type="button"><svg class="i" aria-hidden="true"><use href="#i-scan"/></svg>Scan This Page</button>
           <p id="scanStatus" class="where" role="status"></p>
         </div>
-        <label for="msg" class="sr-only">Message to check</label>
-        <textarea id="msg" rows="5" placeholder="Paste the SMS, WhatsApp message, email or link here…"></textarea>
-        <div class="row">
-          <button id="paste" class="ghost" type="button">📋 Paste</button>
-          <button id="clear" class="ghost" type="button">✖ Clear</button>
-          <label class="check fast"><input type="checkbox" id="cloudOnly" /> ⚡ Fast mode (cloud)</label>
+
+        <div class="composer">
+          <label for="msg" class="sr-only">Message to check</label>
+          <textarea id="msg" name="message" rows="4" autocomplete="off" placeholder="Paste a message, e.g. “Your account will be blocked…”"></textarea>
+          <div class="tools">
+            <button id="paste" class="chip" type="button"><svg class="i" aria-hidden="true"><use href="#i-clipboard"/></svg>Paste</button>
+            <button id="clear" class="chip icon" type="button" aria-label="Clear message"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
         </div>
-        <div class="row">
-          <label>Answer in
+
+        <button id="go" class="primary"><svg class="i" aria-hidden="true"><use href="#i-shield"/></svg>Check Message</button>
+
+        <details class="options">
+          <summary><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg>Options<svg class="i chev" aria-hidden="true"><use href="#i-chevron"/></svg></summary>
+          <label class="check"><input type="checkbox" id="cloudOnly" /> <svg class="i" aria-hidden="true"><use href="#i-zap"/></svg>Fast mode: ask the cloud AI directly</label>
+          <label class="lang"><svg class="i" aria-hidden="true"><use href="#i-globe"/></svg>Answer in
             <select id="lang">
               <option value="auto">Same as message</option>
               <option value="en">English</option>
@@ -79,15 +110,14 @@
               <option value="pcm">Pidgin</option>
             </select>
           </label>
-          <small class="muted">Ctrl+Enter to check</small>
-        </div>
-        <button id="go" class="primary">Check message</button>
+        </details>
+
         <div id="result" role="status" aria-live="polite" hidden></div>
       </section>
 
       <section id="tab-family" hidden>
-        <p>Share one family code. When the protected person gets a risky message, guardians see an alert (never the message itself).</p>
-        <label>Family code <input id="code" placeholder="e.g. mama-2026" /></label>
+        <p>Share one family code. When the protected person gets a risky message, guardians see an alert, never the message itself.</p>
+        <label>Family code <input id="code" name="family-code" autocomplete="off" spellcheck="false" placeholder="e.g. mama-house-2026…" /></label>
         <label class="check"><input type="checkbox" id="notify" checked /> Alert my family when a message is risky</label>
         <h2>Alerts for this family</h2>
         <ul id="alerts" class="list"><li class="muted">Enter a family code to see alerts.</li></ul>

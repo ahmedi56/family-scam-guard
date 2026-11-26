@@ -9,10 +9,14 @@ const $ = (id) => document.getElementById(id);
 const listText = (v) => (Array.isArray(v) ? v.map(String).join(' · ') : '');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Icons come from the SVG sprite in index.html.
+const icon = (name, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const when = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
 const VERDICT = {
-  scam: { icon: '🚨', label: 'Likely a scam', cls: 'bad' },
-  suspicious: { icon: '⚠️', label: 'Be careful', cls: 'warn' },
-  safe: { icon: '✅', label: 'Looks safe', cls: 'ok' },
+  scam: { icon: 'scam', label: "Scam. Don't reply.", short: 'Likely a scam', cls: 'bad' },
+  suspicious: { icon: 'warn', label: 'Be careful', short: 'Be careful', cls: 'warn' },
+  safe: { icon: 'safe', label: 'Looks safe', short: 'Looks safe', cls: 'ok' },
 };
 
 // ---- tabs -------------------------------------------------------------------------------
@@ -27,22 +31,25 @@ document.querySelectorAll('nav button').forEach((b) =>
 );
 
 // ---- engine badge: shows whether the on-device model is ready --------------------------
-function setEngine(text, cls) {
+function setEngine(text, cls, iconName, detail = '') {
   const el = $('engine');
-  el.textContent = text;
-  el.className = `badge ${cls || ''}`;
+  el.innerHTML = `${iconName ? icon(iconName) : ''}${esc(text)}`;
+  el.title = detail;
+  el.className = `pill ${cls || ''}`;
 }
 
 async function initEngine() {
-  if (!firebaseConfigured) return setEngine('Setup needed: add Firebase config to .env', 'warn');
-  setEngine('Preparing on-device model…');
+  if (!firebaseConfigured) return setEngine('Setup needed', 'warn', 'warn', 'Add the Firebase config to .env');
+  setEngine('Getting ready…');
   try {
     await ensureUser();
   } catch (e) {
     console.warn('Anonymous sign-in failed', e);
   }
-  const r = await warmUpOnDevice((p) => setEngine(`Downloading on-device model ${Math.round(p * 100)}%`));
-  setEngine(r.ready ? `On-device model ready 🔒 (${r.availability})` : `Cloud mode. On-device status: ${r.availability}`, r.ready ? 'ok' : '');
+  const r = await warmUpOnDevice((p) => setEngine(`Getting private mode ready ${Math.round(p * 100)}%`));
+  // Plain words for grandparents; the technical status stays in the tooltip.
+  if (r.ready) setEngine('Private mode', 'ok', 'lock', `AI runs on this device (${r.availability})`);
+  else setEngine('Cloud mode', '', 'cloud', `On-device AI not available here (${r.availability})`);
 }
 
 // ---- pending text from the extension's right-click menu ---------------------------------
@@ -77,11 +84,11 @@ function bindFamily() {
       ? items
           .map((a) => {
             const v = VERDICT[a.verdict] || VERDICT.suspicious;
-            const when = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString() : 'just now';
-            return `<li class="${v.cls}"><b>${v.icon} ${esc(a.category)}</b><br><small>${esc(listText(a.reasons))}<br>${when}</small></li>`;
+            const at = a.createdAt?.toDate ? when.format(a.createdAt.toDate()) : 'Just now';
+            return `<li class="${v.cls}"><b>${icon(v.icon)}${esc(a.category)}</b><small>${esc(listText(a.reasons))}<br>${at}</small></li>`;
           })
           .join('')
-      : '<li class="muted">No alerts yet. 🎉</li>';
+      : '<li class="muted">No alerts yet. Your family is safe so far.</li>';
   }, (e) => {
     console.warn('Family alerts failed', e);
     $('alerts').innerHTML = `<li class="warn">Could not load alerts: ${esc(e.code || e.message)}</li>`;
@@ -93,7 +100,7 @@ $('code').addEventListener('change', bindFamily);
 watchCommunity((items) => {
   if (!items.length) return;
   $('community').innerHTML = items
-    .map((r) => `<li><b>${esc(r.category)}</b><br><small>${esc(listText(r.reasons))}</small></li>`)
+    .map((r) => `<li><b>${icon('flag')}${esc(r.category)}</b><small>${esc(listText(r.reasons))}</small></li>`)
     .join('');
 }, (e) => {
   console.warn('Community feed failed', e);
@@ -132,18 +139,17 @@ function speak(text, lang) {
 }
 
 function flagsHtml(signals) {
-  return signals.length ? `<ul class="flags">${signals.map((s) => `<li>🚩 ${esc(s)}</li>`).join('')}</ul>` : '';
+  return signals.length ? `<ul class="flags">${signals.map((s) => `<li>${icon('flag')}<span>${esc(s)}</span></li>`).join('')}</ul>` : '';
 }
 
 // Instant card from rules alone, shown while the AI confirms.
 function renderPending(out, q) {
   const v = VERDICT[q.verdict];
-  const head = v ? `${v.icon} Looks ${q.verdict === 'scam' ? 'like a scam' : 'risky'}` : '🔎 Checking…';
   out.className = `result pending ${v ? v.cls : ''}`;
   out.innerHTML = `
-    <h2>${head} <small>quick check</small></h2>
-    ${flagsHtml(q.signals)}
-    <p class="where"><span class="spinner"></span><span id="statusLine">Starting…</span></p>`;
+    <h2 class="verdict">${icon(v ? v.icon : 'search')}${v ? (q.verdict === 'scam' ? 'Looks like a scam' : 'Looks risky') : 'Checking…'}<small>Quick check</small></h2>
+    <div class="body">${flagsHtml(q.signals)}
+    <p class="where"><span class="spinner"></span><span id="statusLine">Starting…</span></p></div>`;
 }
 const setStatus = (s) => { const el = $('statusLine'); if (el) el.textContent = s; };
 
@@ -153,7 +159,9 @@ async function runCheck() {
   const out = $('result');
   out.hidden = false;
   out.className = 'result pending';
-  out.innerHTML = '<p class="where"><span class="spinner"></span><span id="statusLine">Starting…</span></p>';
+  out.innerHTML = `<h2 class="verdict">${icon('search')}Checking…</h2><div class="body"><p class="where"><span class="spinner"></span><span id="statusLine">Starting…</span></p></div>`;
+  // Bring the answer into view, without a smooth scroll for people who prefer less motion.
+  out.scrollIntoView({ block: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   $('go').disabled = true;
   const fast = $('cloudOnly').checked;
   const seenBefore = flaggedIn(text, await loadFlagged());
@@ -167,29 +175,31 @@ async function runCheck() {
     const v = VERDICT[r.verdict];
     const secs = (r.ms / 1000).toFixed(r.ms < 10000 ? 1 : 0);
     const where =
-      r.source === 'on_device' ? `🔒 Analyzed on your device in ${secs}s. The message never left your phone or computer.`
-      : r.source === 'cache' ? '⚡ Same message checked before. Instant answer.'
-      : `☁️ Analyzed in the cloud in ${secs}s.`;
+      r.source === 'on_device' ? `${icon('lock')}Checked on your device in ${secs}s. The message never left it.`
+      : r.source === 'cache' ? `${icon('clock')}Checked before, so this answer is instant.`
+      : `${icon('cloud')}Checked by the cloud AI in ${secs}s.`;
     const why = r.reasons.length ? r.reasons : r.signals;
-    const slow = r.source === 'on_device' && r.ms > 20000 ? '<p class="tip">💡 This device is slow at on-device AI. Turn on <b>Fast mode</b> for answers in a few seconds.</p>' : '';
+    const slow = r.source === 'on_device' && r.ms > 20000 ? `<p class="tip">${icon('zap')}<span>This device is slow at on-device AI. Turn on <b>Fast mode</b> in Options for answers in a few seconds.</span></p>` : '';
     out.className = `result ${v.cls}`;
     out.innerHTML = `
-      <h2>${v.icon} ${v.label} <small>${r.confidence}%</small></h2>
-      ${/^(none|aucun|لا شيء)?$/i.test(r.category.trim()) ? '' : `<p><b>${esc(r.category)}</b></p>`}
-      ${r.reasons.length ? `<ul>${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      <h2 class="verdict">${icon(v.icon)}${v.label}<small>${r.confidence}%</small></h2>
+      <div class="body">
+      ${/^(none|aucun|لا شيء)?$/i.test(r.category.trim()) ? '' : `<p class="category">${esc(r.category)}</p>`}
+      ${r.advice ? `<p class="advice"><b>What to do</b>${esc(r.advice)}</p>` : ''}
+      ${r.reasons.length ? `<ul class="why">${r.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${flagsHtml(r.signals)}
-      ${seenBefore.length ? `<p class="flags">🚩 Flagged as a scam before: ${esc(seenBefore.map(describe).join(', '))}</p>` : ''}
-      <p class="advice">${esc(r.advice)}</p>
+      ${seenBefore.length ? `<ul class="flags"><li>${icon('flag')}<span>Flagged as a scam before: ${esc(seenBefore.map(describe).join(', '))}</span></li></ul>` : ''}
       <div class="actions">
-        <button id="speak" class="ghost">🔊 Read aloud</button>
-        ${r.verdict !== 'safe' ? '<button id="report" class="ghost">Report this scam pattern</button>' : ''}
+        <button id="speak" type="button">${icon('volume')}Read Aloud</button>
+        ${r.verdict !== 'safe' ? `<button id="report" type="button">${icon('flag')}Report Pattern</button>` : ''}
       </div>
-      <p class="where">${where}</p>${slow}`;
-    $('speak').addEventListener('click', () => speak(`${v.label}. ${r.advice}`, $('lang').value));
+      <p class="where">${where}</p>${slow}</div>`;
+    $('speak').addEventListener('click', () => speak(`${v.short}. ${r.advice}`, $('lang').value));
     $('report')?.addEventListener('click', async (e) => {
       await reportPattern({ ...r, reasons: why });
-      e.target.textContent = 'Thank you! Reported (no message text shared).';
-      e.target.disabled = true;
+      const b = e.currentTarget;
+      b.innerHTML = `${icon('safe')}Reported, without the message text`;
+      b.disabled = true;
     });
     // Tell the page Guardian (extension only) what the AI decided. No message text, only its id.
     try {
@@ -202,14 +212,14 @@ async function runCheck() {
     // Remember this scammer's links/numbers on this device so the page scanner warns next time.
     if (r.verdict === 'scam') rememberScammer(text).catch(() => {});
     // Best-effort cloud writes; they must never block the verdict.
-    const note = (msg) => out.insertAdjacentHTML('beforeend', `<p class="where">${esc(msg)}</p>`);
+    const note = (msg, ic = 'warn') => out.querySelector('.body').insertAdjacentHTML('beforeend', `<p class="where">${icon(ic)}${esc(msg)}</p>`);
     saveScan(r).catch((e) => {
       console.warn('saveScan failed', e);
       note(`History not saved: ${e.code || e.message}`);
     });
     if (r.verdict !== 'safe' && $('notify').checked && familyCode()) {
       alertFamily(familyCode(), { ...r, reasons: why })
-        .then(() => note('👪 Family alerted.'))
+        .then(() => note('Your family was alerted.', 'users'))
         .catch((e) => {
           console.warn('alertFamily failed', e);
           note(`Family alert not sent: ${e.code || e.message}`);
@@ -218,7 +228,7 @@ async function runCheck() {
   } catch (e) {
     console.error(e);
     out.className = 'result warn';
-    out.innerHTML = `<p>Could not check this message. ${esc(e.message || '')}</p><p class="tip">Try again, or turn on Fast mode.</p>`;
+    out.innerHTML = `<h2 class="verdict">${icon('warn')}Couldn't check this message</h2><div class="body"><p>Check your internet connection and try again, or turn on Fast mode in Options.</p><p class="where">${esc(e.message || '')}</p></div>`;
   } finally {
     $('go').disabled = false;
   }
@@ -241,9 +251,9 @@ if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const r = await chrome.tabs.sendMessage(tab.id, { type: 'scan-page' });
-      status.textContent = r.found
-        ? `🚨 Guardian found ${r.found} message${r.found === 1 ? '' : 's'} that look like a scam. Look at the page.`
-        : `✅ Guardian checked ${r.checked} message${r.checked === 1 ? '' : 's'}: no scam signs.`;
+      status.innerHTML = r.found
+        ? `${icon('scam')}Guardian found ${r.found} message${r.found === 1 ? '' : 's'} that look like a scam. Look at the page.`
+        : `${icon('safe')}Guardian checked ${r.checked} message${r.checked === 1 ? '' : 's'}: no scam signs.`;
     } catch {
       // No content script there: chrome:// pages, the Web Store, or a tab opened before install.
       status.textContent = "Guardian can't read this page. Chrome blocks extensions on its own pages; on other sites, reload the page and try again.";
