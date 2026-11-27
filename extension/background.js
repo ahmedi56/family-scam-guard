@@ -18,8 +18,24 @@ chrome.contextMenus.onClicked.addListener((info) => {
   if (info.menuItemId === 'check' && info.selectionText) openCheck(info.selectionText);
 });
 
-chrome.runtime.onMessage.addListener((msg, sender) => {
+// Guardian's automatic check runs in a hidden copy of the popup page (Firebase AI Logic needs a page).
+async function ensureOffscreen() {
+  if (await chrome.offscreen.hasDocument()) return;
+  await chrome.offscreen.createDocument({
+    url: 'index.html?offscreen=1',
+    reasons: ['LOCAL_STORAGE'],
+    justification: 'Run the Firebase AI Logic scam check for Guardian in the background.',
+  });
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (!sender.tab) return;
+  if (msg?.type === 'ai-check' && typeof msg.text === 'string') {
+    ensureOffscreen()
+      .then(() => chrome.runtime.sendMessage({ type: 'offscreen-check', text: msg.text }))
+      .then(reply, (e) => reply({ error: String(e?.message || e) }));
+    return true; // answer asynchronously
+  }
   if (msg?.type === 'check' && typeof msg.text === 'string') openCheck(msg.text.slice(0, 4000));
   // The notification names the site only, never the message.
   if (msg?.type === 'alert') {

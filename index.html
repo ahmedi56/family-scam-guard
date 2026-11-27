@@ -32,6 +32,9 @@
       <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
       <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+      <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+      <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></symbol>
     </svg>
 
     <a class="skip" href="#tab-check">Skip to the message checker</a>
@@ -58,11 +61,25 @@
           <p><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Demo video coming soon</p>
         </div>
 
+        <h2 class="section">What it protects you from</h2>
         <ul class="points">
-          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg></span><div><b>Private</b><span>AI runs on your device first. Messages are never stored.</span></div></li>
-          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-bot"/></svg></span><div><b>Always watching</b><span>Guardian pops up only when a message looks like a scam.</span></div></li>
-          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></span><div><b>Family alerts</b><span>Your family gets the warning, never the message.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-bot"/></svg></span><div><b>Scam messages, by itself</b><span>Guardian reads new messages on WhatsApp Web, Gmail and other sites. When one looks suspicious, the AI checks it automatically and Guardian pops up only if it's a scam.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg></span><div><b>Fake links and fake websites</b><span>Links that pretend to be your bank, PayPal, DHL or MTN, hidden "click here" links, and fake websites you open.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg></span><div><b>Requests for your codes</b><span>"Send me the verification code" is how accounts get stolen. Guardian warns you before you answer.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-flag"/></svg></span><div><b>The same scammer again</b><span>Numbers and links from a scam are remembered on your device. If they come back, Guardian says so.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></span><div><b>Family alerts</b><span>Your children get a warning when a parent receives a scam. Never the message itself.</span></div></li>
+          <li><span class="dot"><svg class="i" aria-hidden="true"><use href="#i-ban"/></svg></span><div><b>Scam calls</b><span>Browsers can't block calls, so Guardian tells you how: open the sender's profile, tap Block and Report, and never call back unknown numbers.</span></div></li>
         </ul>
+
+        <h2 class="section">How to use it</h2>
+        <ol class="steps">
+          <li><b>Install once.</b> Add Guardian to Chrome (4 steps below). It starts watching right away.</li>
+          <li><b>Read your messages as usual.</b> Guardian stays small in the corner and only grows when something is wrong.</li>
+          <li><b>When Guardian warns you:</b> don't reply, don't click, don't send codes or money. Then block the sender.</li>
+          <li><b>Not sure about a message?</b> Paste it below and tap <b>Check Message</b>, or click Guardian's toolbar icon and tap <b>Scan This Page</b>.</li>
+          <li><b>Need a break?</b> Use the <svg class="i" aria-hidden="true"><use href="#i-power"/></svg> <b>Guardian protection</b> switch in the toolbar popup to turn it off and on.</li>
+        </ol>
+        <p class="note"><svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>Guardian reads pages only on your computer. Messages with warning signs are checked by the AI on your device first, and by the cloud AI only when that isn't available. Nothing is stored.</p>
 
         <div class="install" id="install">
           <h2>Add Guardian to Chrome in 4 steps</h2>
@@ -83,6 +100,11 @@
 
       <section id="tab-check" tabindex="-1">
         <div id="scanBox" class="scanbox" hidden>
+          <label class="switch">
+            <input type="checkbox" id="guardOn" role="switch" checked />
+            <span class="track" aria-hidden="true"></span>
+            <span><b>Guardian protection</b><small id="guardState">On: Guardian watches every page and checks suspicious messages for you.</small></span>
+          </label>
           <button id="scanPage" class="primary" type="button"><svg class="i" aria-hidden="true"><use href="#i-scan"/></svg>Scan This Page</button>
           <p id="scanStatus" class="where" role="status"></p>
         </div>

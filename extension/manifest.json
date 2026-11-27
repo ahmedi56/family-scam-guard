@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Family Scam Guard",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Guardian watches the messages you read and warns you about scams in real time. Checks on your device first, never shares your messages.",
   "action": { "default_popup": "index.html", "default_icon": { "16": "icons/icon-16.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" } },
   "icons": { "16": "icons/icon-16.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" },
@@ -15,7 +15,7 @@
     }
   ],
   "web_accessible_resources": [{ "resources": ["signals.js"], "matches": ["<all_urls>"] }],
-  "permissions": ["contextMenus", "storage", "notifications"],
+  "permissions": ["contextMenus", "storage", "notifications", "offscreen"],
   "host_permissions": ["https://*.googleapis.com/*"],
   "minimum_chrome_version": "139"
 }

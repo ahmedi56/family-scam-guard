@@ -5,6 +5,18 @@ import { saveScan, alertFamily, watchFamilyAlerts, reportPattern, watchCommunity
 import { loadFlagged, flaggedIn, rememberScammer, describe, textKey, VERDICT_KEY } from './signals.js';
 
 const $ = (id) => document.getElementById(id);
+// The extension also loads this page hidden ("offscreen") so Guardian can ask the AI automatically.
+const OFFSCREEN = new URLSearchParams(location.search).has('offscreen');
+if (OFFSCREEN) {
+  chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
+    if (msg?.type !== 'offscreen-check' || typeof msg.text !== 'string') return;
+    checkMessage(msg.text.slice(0, 2000), { mode: 'auto' }).then(
+      (r) => reply({ verdict: r.verdict, confidence: r.confidence, reasons: r.reasons.length ? r.reasons : r.signals, advice: r.advice, source: r.source }),
+      (e) => reply({ error: String(e?.message || e) }),
+    );
+    return true; // answer asynchronously
+  });
+}
 // Firestore data comes from other users: tolerate anything that isn't a list of strings.
 const listText = (v) => (Array.isArray(v) ? v.map(String).join(' · ') : '');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -95,6 +107,7 @@ function bindFamily() {
   });
 }
 $('code').addEventListener('change', bindFamily);
+if (!OFFSCREEN) {
 
 // ---- community feed ---------------------------------------------------------------------
 watchCommunity((items) => {
@@ -106,6 +119,7 @@ watchCommunity((items) => {
   console.warn('Community feed failed', e);
   $('community').innerHTML = `<li class="warn">Could not load reports: ${esc(e.code || e.message)}</li>`;
 });
+}
 
 // ---- check flow -------------------------------------------------------------------------
 const store = {
@@ -243,8 +257,19 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 }
 
 // ---- "Scan this page" (extension popup only): ask Guardian on the open tab to re-check it ----
-if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
+if (!OFFSCREEN && typeof chrome !== 'undefined' && chrome.tabs?.query) {
   $('scanBox').hidden = false;
+  // Guardian On/Off: one switch, remembered, applied live on every open page.
+  const sw = $('guardOn');
+  const showGuard = (on) => {
+    sw.checked = on;
+    $('guardState').textContent = on ? 'On: Guardian watches every page and checks suspicious messages for you.' : 'Off: Guardian is resting. Nothing is checked until you turn it back on.';
+  };
+  chrome.storage.local.get('fsg-enabled').then((v) => showGuard(v['fsg-enabled'] !== false));
+  sw.addEventListener('change', () => {
+    chrome.storage.local.set({ 'fsg-enabled': sw.checked });
+    showGuard(sw.checked);
+  });
   $('scanPage').addEventListener('click', async () => {
     const status = $('scanStatus');
     status.textContent = 'Guardian is scanning the page…';
@@ -265,5 +290,5 @@ if (typeof chrome !== 'undefined' && chrome.tabs?.query) {
 if (location.protocol.startsWith('http')) $('landing').hidden = false;
 
 initEngine();
-bindFamily();
+if (!OFFSCREEN) bindFamily();
 loadPendingSelection();
