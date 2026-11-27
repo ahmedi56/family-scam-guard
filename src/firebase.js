@@ -99,7 +99,8 @@ export function getHybridModel(mode, cloudModel) {
     mode,
     inCloudParams: {
       model: cloudModel,
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+      // The answer is a short JSON verdict; capping it keeps each check cheap on the free quota.
+      generationConfig: { responseMimeType: 'application/json', temperature: 0.2, maxOutputTokens: 1024 },
     },
   });
 }

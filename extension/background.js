@@ -19,13 +19,18 @@ chrome.contextMenus.onClicked.addListener((info) => {
 });
 
 // Guardian's automatic check runs in a hidden copy of the popup page (Firebase AI Logic needs a page).
+// Two tabs can ask at the same moment, and Chrome allows only one hidden page: share one creation.
+let creating = null;
 async function ensureOffscreen() {
   if (await chrome.offscreen.hasDocument()) return;
-  await chrome.offscreen.createDocument({
-    url: 'index.html?offscreen=1',
-    reasons: ['LOCAL_STORAGE'],
-    justification: 'Run the Firebase AI Logic scam check for Guardian in the background.',
-  });
+  creating ??= chrome.offscreen
+    .createDocument({
+      url: 'index.html?offscreen=1',
+      reasons: ['LOCAL_STORAGE'],
+      justification: 'Run the Firebase AI Logic scam check for Guardian in the background.',
+    })
+    .finally(() => (creating = null));
+  await creating;
 }
 
 // A freshly created hidden page needs a moment before it listens: retry instead of failing silently.

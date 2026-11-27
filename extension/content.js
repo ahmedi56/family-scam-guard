@@ -1,7 +1,7 @@
-// Guardian: the always-on page watcher. Runs on every website, entirely on this computer: instant
-// rule checks only, no AI and no network from here. When a message looks risky, Guardian reacts and
-// offers an AI check, which runs in the extension popup through Firebase AI Logic (on-device first,
-// cloud fallback). The popup writes the verdict back to chrome.storage.local and Guardian shows it.
+// Guardian: the always-on page watcher. Runs on every website. Instant rule checks run here, on this
+// computer. Messages with a warning sign the rules can't settle go to the extension's hidden AI page
+// (Firebase AI Logic: on-device first, cloud fallback); answers are remembered so each message is
+// asked about once. Guardian pops up only for scams, fake links and fake websites.
 (async () => {
   const { matchSignals, isScamShaped, linkRisks, flaggedIn, loadFlagged, rememberScammer, describe, textKey, VERDICT_KEY } = await import(chrome.runtime.getURL('signals.js'));
   let flagged = await loadFlagged();
@@ -123,51 +123,90 @@
     });
   }
 
+  // Guardian remembers each message by its text, not by its place on the page: WhatsApp rebuilds the
+  // chat when you switch, so the same message comes back as brand-new page elements.
+  const scams = new Map(); // key -> { text } scam messages found in this tab
+  const counted = new Set(); // keys of every message read in this tab
+  const pageHits = new Set(); // scam keys seen during the current manual scan
+  const pageSeen = new Set(); // message keys seen during the current manual scan
+  let siteWarned = false;
+  const mark = (block) => {
+    block.style.outline = '2px solid #dc2626';
+    block.style.outlineOffset = '2px';
+  };
+
+  // AI answers are saved on this computer, so the same message is never sent to the AI twice.
+  const AI_CACHE = 'fsg-ai-v1';
+  const aiCache = (await chrome.storage.local.get(AI_CACHE))[AI_CACHE] || {};
+  async function rememberAi(key, r) {
+    aiCache[key] = r.verdict === 'scam' ? { v: 'scam', reasons: (r.reasons || []).slice(0, 3), advice: r.advice || '' } : { v: r.verdict };
+    // Other tabs save answers too: merge with the stored copy instead of overwriting it.
+    Object.assign(aiCache, { ...((await chrome.storage.local.get(AI_CACHE))[AI_CACHE] || {}), [key]: aiCache[key] });
+    const keys = Object.keys(aiCache);
+    for (const k of keys.slice(0, Math.max(0, keys.length - 300))) delete aiCache[k]; // keep the newest 300
+    await chrome.storage.local.set({ [AI_CACHE]: aiCache });
+  }
+
   root.querySelector('.g').addEventListener('click', () => {
     if (!bubble.hidden) return setState('watch');
+    const n = counted.size;
     setState('watch', `<h3>Guardian is watching</h3>
-      <p>I have checked <b>${checked}</b> message${checked === 1 ? '' : 's'} on this page${risky ? `, and <b>${risky}</b> looked risky` : '. Nothing risky so far'}.</p>
-      <p>I react on my own when a message shows scam signs. To check any text yourself, select it, right-click, and choose <b>Check with Family Scam Guard</b>.</p>
+      <p>I have read <b>${n}</b> message${n === 1 ? '' : 's'} in this tab${scams.size ? `, and <b>${scams.size}</b> ${scams.size === 1 ? 'is a scam' : 'are scams'}` : '. No scams so far'}.</p>
+      <p>I react on my own when a message looks dangerous. To check everything again, click my toolbar icon and tap <b>Scan This Page</b>.</p>
       <p class="meta">${ic('lock')}I read only on this computer and never save or share your messages.</p>${buttons(false)}`);
     bindButtons();
   });
-  let checked = 0;
-  let risky = 0;
 
   // Say hello once, so a new user knows Guardian is alive and what it does.
   chrome.storage.local.get('fsg-greeted').then(({ 'fsg-greeted': greeted }) => {
-    if (greeted || current || risky) return;
+    if (greeted || current || scams.size || siteWarned) return;
     chrome.storage.local.set({ 'fsg-greeted': true });
     setState('watch', `<h3>${ic('hand')}Hi, I am Guardian</h3><p>I watch the messages on the pages you visit and warn you when one looks like a scam. Click me any time to see what I have checked.</p>${buttons(false)}`);
     bindButtons();
   });
 
-  // Only called for scam-shaped messages (see scan); the AI confirms on request.
-  function react(block, text, signals, before) {
+  // Browsers can't block calls or senders for you, so say exactly how to do it in the app.
+  const blockTip = () => `<p class="meta">${ic('ban')}<span>To stop this sender, open their profile, then tap <b>Block</b> and <b>Report</b>. Don't call back unknown numbers.</span></p>`;
+  const quote = (text) => `<q>${esc(text.slice(0, 90))}${text.length > 90 ? '…' : ''}</q>`;
+
+  // A new scam found by the rules (scam-shaped message, or a sender flagged before).
+  function react(block, text, key, signals, before) {
+    scams.set(key, { text });
     current = { text, key: textKey(text), block };
-    risky++;
-    block.style.outline = '2px solid #dc2626';
-    block.style.outlineOffset = '2px';
+    mark(block);
     const flags = [...signals, ...(before.length ? [`Flagged as a scam before: ${before.map(describe).join(', ')}`] : [])];
-    setState('bad', `<h3>${ic('scam')}This looks like a scam</h3>
-      <q>${esc(text.slice(0, 90))}${text.length > 90 ? '…' : ''}</q><ul class="f">${flags.map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
+    setState('bad', `<h3>${ic('scam')}This looks like a scam</h3>${quote(text)}
+      <ul class="f">${flags.map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
       <p><b>Do not click links or send codes or money yet.</b></p>${blockTip()}${buttons(true)}`);
     bindButtons();
     chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
   }
 
-  // Browsers can't block calls or senders for you, so say exactly how to do it in the app.
-  const blockTip = () => `<p class="meta">${ic('ban')}<span>To stop this sender, open their profile, then tap <b>Block</b> and <b>Report</b>. Don't call back unknown numbers.</span></p>`;
+  // A scam found by the AI. `quiet` (answer remembered from an earlier visit) means no new notification.
+  function aiReact(block, text, key, r, quiet = false) {
+    scams.set(key, { text });
+    current = { text, key: textKey(text), block };
+    mark(block);
+    if (quiet && !bubble.hidden) return;
+    const where = r.source === 'on_device' ? `${ic('lock')}Checked by the AI on your device` : r.source === 'in_cloud' ? `${ic('cloud')}Checked by the cloud AI` : `${ic('clock')}The AI checked this message before`;
+    setState('bad', `<h3>${ic('scam')}The AI found a scam</h3>${quote(text)}
+      <ul class="f">${(r.reasons || []).slice(0, 3).map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
+      <p><b>${esc(r.advice || 'Do not reply, click links, or send codes or money.')}</b></p>${blockTip()}<p class="meta">${where}</p>${buttons(false)}`);
+    bindButtons();
+    if (quiet) return;
+    chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
+    rememberScammer(text).catch(() => {});
+  }
 
   // ---- automatic AI check: messages with a warning sign the rules can't settle -----------------
   // One at a time, at most 20 waiting, each message once; Guardian speaks only if the AI says scam.
   const aiAsked = new Set();
   const aiQueue = [];
   let aiBusy = false;
-  function queueAi(block, text) {
-    if (aiAsked.has(text) || aiQueue.length >= 20) return;
-    aiAsked.add(text);
-    aiQueue.push({ block, text });
+  function queueAi(block, text, key) {
+    if (aiAsked.has(key) || aiQueue.length >= 20) return;
+    aiAsked.add(key);
+    aiQueue.push({ block, text, key });
     pumpAi();
   }
   async function pumpAi() {
@@ -178,34 +217,27 @@
     if (bubble.hidden) setState('scan'); // visible "Guardian is checking" without a popup
     try {
       const r = await chrome.runtime.sendMessage({ type: 'ai-check', text: job.text });
-      if (r?.error) {
-        aiAsked.delete(job.text); // let a later scan try this message again
-        console.warn('[Guardian] AI check failed:', r.error);
-      } else if (r?.verdict === 'scam' && !warned.has(job.text) && job.block.isConnected) {
-        warned.add(job.text);
-        aiReact(job, r);
+      if (!r || r.error) {
+        aiAsked.delete(job.key); // let a later scan try this message again
+        console.warn('[Guardian] AI check failed:', r?.error || 'no answer');
+      } else {
+        rememberAi(job.key, r).catch(() => {});
+        if (r.verdict === 'scam' && !scams.has(job.key)) {
+          pageHits.add(job.key);
+          aiReact(job.block, job.text, job.key, r);
+          // The chat may have been rebuilt while the AI was thinking: outline the copy on screen now.
+          seen = new WeakMap();
+          scan(document.body);
+        }
       }
     } catch (e) {
-      aiAsked.delete(job.text);
+      aiAsked.delete(job.key);
       console.warn('[Guardian] AI check failed:', e); // the rules still protect meanwhile
     } finally {
       aiBusy = false;
       if (bubble.hidden) setState('watch');
       pumpAi();
     }
-  }
-  function aiReact({ block, text }, r) {
-    current = { text, key: textKey(text), block };
-    risky++;
-    block.style.outline = '2px solid #dc2626';
-    block.style.outlineOffset = '2px';
-    const where = r.source === 'on_device' ? `${ic('lock')}Checked by the AI on your device` : r.source === 'cache' ? `${ic('clock')}Checked before` : `${ic('cloud')}Checked by the cloud AI`;
-    setState('bad', `<h3>${ic('scam')}The AI found a scam</h3>
-      <q>${esc(text.slice(0, 90))}${text.length > 90 ? '…' : ''}</q><ul class="f">${(r.reasons || []).slice(0, 3).map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
-      <p><b>${esc(r.advice || 'Do not reply, click links, or send codes or money.')}</b></p>${blockTip()}<p class="meta">${where}</p>${buttons(false)}`);
-    bindButtons();
-    chrome.runtime.sendMessage({ type: 'alert', site: location.hostname });
-    rememberScammer(text).catch(() => {});
   }
 
   // The popup's AI verdict for the message Guardian asked about.
@@ -218,6 +250,7 @@
       if (enabled) {
         seen = new WeakMap();
         scan(document.body);
+        pumpAi(); // resume checks that were waiting when Guardian was switched off
       }
     }
     const v = changes[VERDICT_KEY]?.newValue;
@@ -231,8 +264,8 @@
   });
 
   // ---- page scanning ---------------------------------------------------------------------------
-  let seen = new WeakMap(); // block -> text already scanned
-  const warned = new Set(); // texts Guardian already reacted to on this page
+  let seen = new WeakMap(); // page element -> text already read (skips unchanged elements)
+  let recheckSafe = false; // Scan This Page asks the AI again even about messages it called safe
   const BLOCKS = 'p,li,td,blockquote,article,[role="row"],[role="listitem"],[data-pre-plain-text],div';
 
   function scan(rootNode) {
@@ -249,45 +282,65 @@
       const text = (block.innerText || '').trim();
       if (text.length < 25 || text.length > 1500 || seen.get(block) === text) continue;
       seen.set(block, text);
-      checked++;
+      const key = textKey(text);
+      counted.add(key);
+      pageSeen.add(key);
+      // Same scam, new copy of the page element: outline it again, no new alert or count.
+      if (scams.has(key)) {
+        mark(block);
+        pageHits.add(key);
+        continue;
+      }
       // Also read where links really go: an email's "Click here" can hide a fake address.
       const hrefs = [...block.querySelectorAll('a[href^="http"]')].slice(0, 20).map((a) => a.href).join(' ');
       const signals = matchSignals(`${text} ${hrefs}`);
       const before = flaggedIn(text, flagged);
-      if ((isScamShaped(signals) || before.length) && !warned.has(text)) {
-        warned.add(text);
-        react(block, text, signals, before);
-      } else if (signals.length && !warned.has(text)) {
-        queueAi(block, text); // a warning sign, but not enough for the rules alone: ask the AI
+      if (isScamShaped(signals) || before.length) {
+        pageHits.add(key);
+        react(block, text, key, signals, before);
+      } else if (signals.length) {
+        const known = aiCache[key]; // the AI already answered: no new AI call
+        if (known?.v === 'scam') {
+          pageHits.add(key);
+          aiReact(block, text, key, known, true);
+        } else if (!known || recheckSafe) {
+          queueAi(block, text, key); // a warning sign, but not enough for the rules alone: ask the AI
+        }
       }
     }
   }
 
-  // "Scan this page" from the extension popup: re-read everything and always answer.
+  // "Scan this page" from the extension popup: re-read everything and summarize the whole page.
   chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
     if (msg?.type !== 'scan-page') return;
-    const wasOn = enabled;
     enabled = true;
     host.style.display = '';
     seen = new WeakMap();
-    warned.clear();
-    checked = 0;
-    aiAsked.clear(); // a manual scan asks the AI again about every suspicious message
-    const before = risky;
+    pageHits.clear();
+    pageSeen.clear();
+    aiAsked.clear(); // retry failed checks, and re-ask earlier "safe" answers once
+    recheckSafe = true;
     scan(document.body);
+    recheckSafe = false;
     // Answer only after the AI has looked at every suspicious message (or after 60 s).
     (async () => {
       const asking = aiQueue.length + (aiBusy ? 1 : 0);
-      if (asking && risky === before) {
+      if (asking) {
         setState('scan', `<h3>${ic('search')}Checking ${asking} suspicious message${asking === 1 ? '' : 's'}…</h3><p>I am asking the AI, on your device first.</p>`);
       }
       for (let t = 0; (aiBusy || aiQueue.length) && t < 120; t++) await new Promise((r) => setTimeout(r, 500));
-      const found = risky - before;
-      enabled = wasOn;
-      if (!found) {
+      // Use the switch's current value: the user may have changed it while the AI was checking.
+      enabled = (await chrome.storage.local.get('fsg-enabled'))['fsg-enabled'] !== false;
+      const found = pageHits.size;
+      const checked = pageSeen.size;
+      if (found) {
+        setState('bad', `<h3>${ic('scam')}${found} scam message${found === 1 ? '' : 's'} on this page</h3>
+          <ul class="f">${[...pageHits].slice(0, 4).map((k) => `<li>${ic('flag')}<span>${esc((scams.get(k)?.text || '').slice(0, 70))}…</span></li>`).join('')}</ul>
+          <p>They are outlined in red. Don't reply, click their links, or send codes or money.</p>${blockTip()}${buttons(false)}`);
+      } else {
         setState('ok', `<h3>${ic('safe')}No scam signs on this page</h3><p>I checked <b>${checked}</b> message${checked === 1 ? '' : 's'}${asking ? `, and the AI checked the ${asking} that looked suspicious` : ''}. Nothing is a scam.</p>${buttons(false)}`);
-        bindButtons();
       }
+      bindButtons();
       reply({ checked, found });
     })();
     return true; // reply arrives after the AI answers
@@ -297,7 +350,7 @@
   // Is the website itself fake? (an address copying a bank or brand, a bare number address, look-alike letters)
   const siteRisks = enabled ? linkRisks(location.href) : [];
   if (siteRisks.length) {
-    risky++;
+    siteWarned = true;
     setState('bad', `<h3>${ic('scam')}This website may be fake</h3><p class="meta">${esc(location.hostname)}</p>
       <ul class="f">${siteRisks.map((f) => `<li>${ic('flag')}<span>${esc(f)}</span></li>`).join('')}</ul>
       <p><b>Do not enter passwords, codes or card details on this site.</b></p><p class="meta">${ic('ban')}<span>Close this tab. To be sure, type the real website address yourself.</span></p>${buttons(false)}`);
