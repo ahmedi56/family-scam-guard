@@ -28,11 +28,25 @@ async function ensureOffscreen() {
   });
 }
 
+// A freshly created hidden page needs a moment before it listens: retry instead of failing silently.
+async function askOffscreen(text) {
+  for (let i = 0; ; i++) {
+    try {
+      const r = await chrome.runtime.sendMessage({ type: 'offscreen-check', text });
+      if (r !== undefined) return r;
+    } catch (e) {
+      if (i >= 20 || !/Receiving end does not exist|Could not establish connection/i.test(String(e?.message || e))) throw e;
+    }
+    if (i >= 20) return { error: 'The AI page did not answer' };
+    await new Promise((r) => setTimeout(r, 500));
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (!sender.tab) return;
   if (msg?.type === 'ai-check' && typeof msg.text === 'string') {
     ensureOffscreen()
-      .then(() => chrome.runtime.sendMessage({ type: 'offscreen-check', text: msg.text }))
+      .then(() => askOffscreen(msg.text))
       .then(reply, (e) => reply({ error: String(e?.message || e) }));
     return true; // answer asynchronously
   }

@@ -160,12 +160,12 @@
   const blockTip = () => `<p class="meta">${ic('ban')}<span>To stop this sender, open their profile, then tap <b>Block</b> and <b>Report</b>. Don't call back unknown numbers.</span></p>`;
 
   // ---- automatic AI check: messages with a warning sign the rules can't settle -----------------
-  // One at a time, at most 5 waiting, each message once; Guardian speaks only if the AI says scam.
+  // One at a time, at most 20 waiting, each message once; Guardian speaks only if the AI says scam.
   const aiAsked = new Set();
   const aiQueue = [];
   let aiBusy = false;
   function queueAi(block, text) {
-    if (aiAsked.has(text) || aiQueue.length >= 5) return;
+    if (aiAsked.has(text) || aiQueue.length >= 20) return;
     aiAsked.add(text);
     aiQueue.push({ block, text });
     pumpAi();
@@ -178,12 +178,16 @@
     if (bubble.hidden) setState('scan'); // visible "Guardian is checking" without a popup
     try {
       const r = await chrome.runtime.sendMessage({ type: 'ai-check', text: job.text });
-      if (r?.verdict === 'scam' && !warned.has(job.text) && job.block.isConnected) {
+      if (r?.error) {
+        aiAsked.delete(job.text); // let a later scan try this message again
+        console.warn('[Guardian] AI check failed:', r.error);
+      } else if (r?.verdict === 'scam' && !warned.has(job.text) && job.block.isConnected) {
         warned.add(job.text);
         aiReact(job, r);
       }
-    } catch {
-      /* AI unavailable right now: the rules still protect */
+    } catch (e) {
+      aiAsked.delete(job.text);
+      console.warn('[Guardian] AI check failed:', e); // the rules still protect meanwhile
     } finally {
       aiBusy = false;
       if (bubble.hidden) setState('watch');
@@ -268,15 +272,25 @@
     seen = new WeakMap();
     warned.clear();
     checked = 0;
+    aiAsked.clear(); // a manual scan asks the AI again about every suspicious message
     const before = risky;
     scan(document.body);
-    const found = risky - before;
-    enabled = wasOn;
-    if (!found) {
-      setState('ok', `<h3>${ic('safe')}No scam signs on this page</h3><p>I checked <b>${checked}</b> message${checked === 1 ? '' : 's'} and found nothing suspicious.</p>${buttons(false)}`);
-      bindButtons();
-    }
-    reply({ checked, found });
+    // Answer only after the AI has looked at every suspicious message (or after 60 s).
+    (async () => {
+      const asking = aiQueue.length + (aiBusy ? 1 : 0);
+      if (asking && risky === before) {
+        setState('scan', `<h3>${ic('search')}Checking ${asking} suspicious message${asking === 1 ? '' : 's'}…</h3><p>I am asking the AI, on your device first.</p>`);
+      }
+      for (let t = 0; (aiBusy || aiQueue.length) && t < 120; t++) await new Promise((r) => setTimeout(r, 500));
+      const found = risky - before;
+      enabled = wasOn;
+      if (!found) {
+        setState('ok', `<h3>${ic('safe')}No scam signs on this page</h3><p>I checked <b>${checked}</b> message${checked === 1 ? '' : 's'}${asking ? `, and the AI checked the ${asking} that looked suspicious` : ''}. Nothing is a scam.</p>${buttons(false)}`);
+        bindButtons();
+      }
+      reply({ checked, found });
+    })();
+    return true; // reply arrives after the AI answers
   });
 
   setState('watch');
